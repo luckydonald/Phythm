@@ -27,5 +27,5 @@ for i in range(0, 20):
 	print(getBestMatch(100))
 
 
-db.commit()
+#db.commit()
 c.close()
