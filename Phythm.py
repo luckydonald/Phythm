@@ -10,9 +10,10 @@ print
 
 #create table
 #			
-#		BPM  |  PATH
-#               199  |  /music/
+#		ID   |  BPM  |  PATH
+#               0    |  199  |  /music/
 #
 
 
 c.execute('''CRATE TABLE bpm (id int, bpm int, path text)''')
+
