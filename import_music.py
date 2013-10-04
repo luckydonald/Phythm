@@ -1,4 +1,4 @@
-import sqlite3, settings
+import sqlite3, settings, eyed3, os
 
 db = sqlite3.connect("music.sqlite")
 
@@ -10,13 +10,16 @@ c.execute("CREATE TABLE music (id INT , bpm INT ,path TEXT);") # create table
 music = []
 
 scan_dir = settings.music_path
+ext = settings.music_extensions
 
 print("Scanning for music files!")
 
 #scan music files and insert a dict with keys 'bpm' and 'path' into 'music'
 
 def getBPM(file):
-    print("getting bpm of " + file)
+    audiofile = eyed3.load(file)
+    print("BPM of " + file + " is " + str(audiofile.tag.bpm))
+    return audiofile.tag.bpm
 
 def scan(top):
     print("Scanning: " + top)
@@ -26,26 +29,20 @@ def scan(top):
             for file in scan(f):
                 list.append(file)
         else:
-            list.append({"path": os.path.abspath(f), "bpm": getBPM(os.path.abspath(f))})
+            parts = f.split(".")
+            if parts[len(parts) - 1] in ext:
+                f = os.path.join(scan_dir, f)
+                list.append({"path": f, "bpm": getBPM(f)})
     return list
 
-#music = scan(scan_dir)  # scan music dictionary
-
-#some data for testing
-music = [{"bpm": 120    , "path": "testpath1"},
-         {"bpm": 80     , "path": "testpath2"},
-         {"bpm": 100    , "path": "testpath3"},
-         {"bpm": 65     , "path": "testpath4"},
-         {"bpm": 74     , "path": "testpath5"},
-         {"bpm": 137    , "path": "testpath6"}]
-
+music = scan(scan_dir)  # scan music dictionary
 
 print("Found " + str(len(music)) + " files!")
 
 i = 0
 
 for file in music:
-    c.execute('INSERT INTO "music" VALUES (?, ?, ?);', (i, file['bpm'], file["path"]))
+    c.execute('INSERT INTO "music" VALUES (?, ?, ?);', (i, file['bpm'], unicode(file["path"])))
     i += 1
 
 db.commit()
