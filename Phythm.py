@@ -38,7 +38,7 @@ def processFile(currentDir):
 				processFile.list.append(curFile)
 		else:
 			# We got a directory, enter into it for further processing
-			print('. Found dir: %s' % curFile)
+			print('# Found dir: %s' % curFile)
 			processFile(curFile)
 				
 			
@@ -78,7 +78,7 @@ if __name__ == '__main__':
 	raw_input()
 	
 	
-	print('== Creating Database == ')
+	print('=== Creating Database === ')
 	
 	
 	sqlconn = sqlite3.connect('songs.db')
@@ -86,32 +86,36 @@ if __name__ == '__main__':
 	#lets get a cursor!
 	c = sqlconn.cursor()
 	
-	print(' > Droping old Database')
+	print(' |-> Droping old Database')
 	
 	c.execute('''DROP TABLE bpm''')
-	print(' > Creating Database')
+	print(' |-> Creating Database')
 
 	#create table
 	#			
-	#		ID   |  BPM  |  PATH
-	#               0    |  199  |  /music/song.mp3
+	#		ID   |  BPM  |  PATH            | COUNT
+	#               0    |  199  |  /music/song.mp3 | 12
 	#
-	print(' > Creating Table')
+	print(' |-> Creating Table')
 
 	
-	c.execute('''CREATE TABLE bpm (id  INTEGER PRIMARY KEY, bpm int, path text)''')
+	c.execute('''CREATE TABLE bpm (id  INTEGER PRIMARY KEY, bpm int, path text,count int)''')
 	
 	for file in processFile.list:
-		print(' > Processing file %s' % file)
-		print(' -> Getting Data')
+		print(' |')
+		print(' |--> Processing file %s' % file)
+		print(' ||-> Getting Data')
 		audiofile = eyed3.load(file)
 		bpm = audiofile.tag.bpm
-		print(' -> BPM: %s' % bpm)
+		print(' ||-> BPM: %s' % bpm)
 		if bpm == None:
 			bpm = -1
-			print(' -> changing BPM to : %s' % bpm)
-		print(' > Inserting into Database')
-		print(' > (INSERT INTO bpm VALUES (NULL,%s,"%s")' % (bpm, file))
-		c.execute("INSERT INTO bpm VALUES (NULL,%s,\"%s\")" % (bpm, file))
+			print(' ||#> changing BPM to : %s' % bpm)
+		print(' ||-> Inserting into Database')
+		print(' ||-> (INSERT INTO bpm VALUES (NULL,%s,"%s",0)' % (bpm, file))
+		c.execute("INSERT INTO bpm VALUES (NULL,%s,\"%s\",0)" % (bpm, file))
+		print(' |\-> Done.')
 	sqlconn.commit()
+	print(' |-> Commited Database')
 	sqlconn.close()
+	print(' \-> Closed Database')
