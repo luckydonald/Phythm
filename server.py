@@ -1,10 +1,11 @@
-import sqlite3
+import sqlite3, settings
 
 db = sqlite3.connect("music.sqlite")
 
 c = db.cursor()
 
-diff = 20
+diff = settings.max_diff
+
 played = []
 
 
