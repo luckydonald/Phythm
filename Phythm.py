@@ -1,4 +1,5 @@
 import sqlite3
+import eyed3
 import glob
 import os
 
@@ -33,10 +34,11 @@ def processFile(currentDir):
 				processFile.counter += 1
 				
 				# Print it's name
-				print('Found file: %s' % curFile)
+				print('+ Found file: %s' % curFile)
+				processFile.list.append(curFile)
 		else:
 			# We got a directory, enter into it for further processing
-			print('Found dir: %s' % curFile)
+			print('. Found dir: %s' % curFile)
 			processFile(curFile)
 				
 			
@@ -62,38 +64,54 @@ if __name__ == '__main__':
 	
 	# Set the number of processed files equal to zero
 	processFile.counter = 0
+	processFile.list = []
 	
 	# Start Processing
 	processFile(currentDir)
 	
 	# We are done. Continue now. Write Report.
-	print(' -- %s Song File(s) found in directory %s --' \
+	print(' -- %s Song File(s) found in directory %s/ --' \
 	  % (processFile.counter, currentDir))
-	print(' Press ENTER to exit!')
+	print(' Press ENTER to continue!')
 	
 	# Wait until the user presses enter/return
 	raw_input()
 	
 	
-	print('Creating Database')
+	print('== Creating Database == ')
 	
 	
 	sqlconn = sqlite3.connect('songs.db')
 	
 	#lets get a cursor!
 	c = sqlconn.cursor()
-	print('Creating Database')
-
 	
+	print(' > Droping old Database')
+	
+	c.execute('''DROP TABLE bpm''')
+	print(' > Creating Database')
+
 	#create table
 	#			
 	#		ID   |  BPM  |  PATH
 	#               0    |  199  |  /music/song.mp3
 	#
-	print('Creating Table')
+	print(' > Creating Table')
 
 	
-	c.execute('''CREATE TABLE bpm (id int, bpm int, path text)''')
+	c.execute('''CREATE TABLE bpm (id  INTEGER PRIMARY KEY, bpm int, path text)''')
 	
-
-	
+	for file in processFile.list:
+		print(' > Processing file %s' % file)
+		print(' -> Getting Data')
+		audiofile = eyed3.load(file)
+		bpm = audiofile.tag.bpm
+		print(' -> BPM: %s' % bpm)
+		if bpm == None:
+			bpm = -1
+			print(' -> changing BPM to : %s' % bpm)
+		print(' > Inserting into Database')
+		print(' > (INSERT INTO bpm VALUES (NULL,%s,"%s")' % (bpm, file))
+		c.execute("INSERT INTO bpm VALUES (NULL,%s,\"%s\")" % (bpm, file))
+	sqlconn.commit()
+	sqlconn.close()
