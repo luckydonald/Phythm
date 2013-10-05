@@ -58,7 +58,7 @@ class BPMServer():
     info = {
         "bpm": 0,
         "song": {
-                "name": "Songname", 
+                "title": "Songname", 
                 "artist": "Songartist", 
                 "length": 325,
                 "bpm":-1

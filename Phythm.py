@@ -7,9 +7,9 @@ import os
 
 ############################
  ##########################
-  ## 			##
-  ## 	 Functions	##
-  ##			##
+  ## 			        ##
+  ## 	 Functions	    ##
+  ##			        ##
  ##########################
 ############################
 
@@ -17,7 +17,6 @@ def processFile(currentDir):
 	''' Process video files within this directory. '''
 	# Get the absolute path of the currentDir parameter
 	currentDir = os.path.abspath(currentDir)
-	
 	# Get a list of files in currentDir
 	filesInCurDir = os.listdir(currentDir)
 	
@@ -50,9 +49,9 @@ def processFile(currentDir):
 				
 ############################
  ##########################
-  ## 			##
-  ## 	    Main	##
-  ##			##
+  ## 			        ##
+  ## 	    Main	    ##
+  ##			        ##
  ##########################
 ############################
 processFile.counter = -1
@@ -60,7 +59,8 @@ processFile.counter = -1
 if __name__ == '__main__':
 	# Get the current working directory
 	currentDir = os.getcwd()
-	currentDir = songdir = settings.music_path #"/music"
+	currentDir = songdir = settings.conf["music_path"]
+ #"/music"
 	
 	print('Starting processing in %s' % currentDir)
 	

@@ -1,1 +1,94 @@
+<html>
+<title> Wubaduba diuah.</title>
+<body>
 <h1>Test</h1>
+
+<script>
+
+function DoRequest(){
+
+     var xmlHttp = createXmlHttpRequestObject();
+
+    try {
+    xmlHttp.open("GET", "/cmd.json?info",true);
+    xmlHttp.onreadystatechange = function() {
+        if (xmlHttp.readyState == 4 && xmlHttp.status==200){
+        var myJSONObject =  JSON.parse(xmlHttp.responseText)
+        alert(myJSONObject.communication[0].communication_name)
+         }
+    }
+    xmlHttp.send(null);
+
+    } catch (e){
+    alert("Can't connect to server:\n" + e.toString());
+    }
+}
+
+</script>
+
+
+
+<script type="text/javascript">
+
+function ajaxRequest(){
+ var activexmodes=["Msxml2.XMLHTTP", "Microsoft.XMLHTTP"] //activeX versions to check for in IE
+ if (window.ActiveXObject){ //Test for support for ActiveXObject in IE first (as XMLHttpRequest in IE7 is broken)
+  for (var i=0; i<activexmodes.length; i++){
+   try{
+    return new ActiveXObject(activexmodes[i])
+   }
+   catch(e){
+    //suppress error
+   }
+  }
+ }
+ else if (window.XMLHttpRequest) // if Mozilla, Safari etc
+  return new XMLHttpRequest()
+ else
+  return false
+}
+
+var mygetrequest=new ajaxRequest()
+mygetrequest.onreadystatechange=function(){
+ if (mygetrequest.readyState==4){
+  if (mygetrequest.status==200 || window.location.href.indexOf("http")==-1){
+   //var jsondata=eval("("+mygetrequest.responseText+")") //retrieve result as an JavaScript object
+   var jsondata = JSON.parse(mygetrequest.responseText);
+   dataArray = jsondata;
+
+  }
+  else{
+   alert("An error has occured making the request")
+  }
+ }
+}
+var dataArray;
+mygetrequest.open("GET", "/cmd.json?info", true)	
+mygetrequest.send(null)
+function $(id){
+	return document.getElementById(id);
+}
+function ajaxRefresh(){
+	mygetrequest.open("GET", "/cmd.json?info", true)
+	mygetrequest.send(null)
+	var infostring = dataArray.message.song.name + " by " + dataArray.message.song.artist;
+	$("songtitle").innerHTML=dataArray.message.song.title;
+	$("songartist").innerHTML=dataArray.message.song.artist;	
+	$("songbpm").innerHTML=dataArray.message.song.bpm + " BPM";	
+}
+
+
+</script>
+<div id="infobox">
+	<div id="songinfo">
+		<span id="songtitle">Unknown Title</span> - <span id="songartist">Unknown Artist<span> @ <span id="songbpm">-1 BPM</span>
+	</div>
+	<div id="controls">
+		<input id="prev" type="button" value="&#9665;" /><input id="playpause" type="button" value="&#65517;&nbsp;&#9658;" /><input id="next" type="button" value="&#9655;" />
+	</div>
+<input type="button" onclick='ajaxRefresh()' value="&reg;"/>
+
+<hr>
+The Pinkie Pie Is A Lie! 
+</body>
+</html>
