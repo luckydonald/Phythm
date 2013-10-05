@@ -52,7 +52,8 @@ class BPMServer():
     played = []
     
     last_tick = time.time()
-    
+    bpmHistory = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0] #TODO: Add mechanism to change the length in the config File
+    bpmAverage = 0
     bpm = 0
     
     info = {
@@ -77,7 +78,13 @@ class BPMServer():
         iotest.start(self)
         
         while True:
-            print(self.bpm)
+            
+            #print("Run> Current BPM is %s" % )
+            del self.bpmHistory[0]
+            self.bpmHistory.append(self.bpm)
+            self.bpmAverage = (sum(self.bpmHistory)/20)        #see TODO: Add mechanism to change the length in the config File
+            print("Run> BPM Statistics: Current BPM is %s - Average BPM is %s" % (self.bpm,self.bpmAverage))
+
             time.sleep(1)
         
     def bpmTick(self):
@@ -85,6 +92,8 @@ class BPMServer():
         diff = curr - self.last_tick
         self.last_tick = curr
         self.bpm = (1.0 / diff) * 60.0
+        print("BPM> update to %s" % self.bpm)
+
         
         #print("Tick! " + str(diff))
         
