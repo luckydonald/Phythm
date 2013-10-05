@@ -1,12 +1,31 @@
+import os, json
 
-# configuration file for Phythm
-import platform
-print('Your Platform is %s.' % platform.system())
-if platform.system() == "Windows":
-	music_path          = "I:/r"                # path to the music folder for scanning
+conf = {}
+
+default = {
+		"music_path":				  ".",
+		"music_extensions":			["mp3", "flac"],
+		"max_diff":					20
+		}
+
+config_file = "config.json"
+
+needs_update = False
+
+if os.path.exists(config_file):
+	print("reading configuration from " + config_file)
+	cfg = json.loads(open(config_file, "r").read())
+	for key in default.keys():
+		if key in cfg:
+			conf[key] = cfg[key]
+		else:
+			conf[key] = default[key]
+			needs_update = True
 else:
-	music_path          = "/music"                # path to the music folder for scanning
+	conf = default
+	needs_update = True
 
-music_extensions    = ["mp3", "flac"]       # valid extensions for music files
-
-max_diff            = 20                    # maximum difference between searched and found bpm values
+if needs_update:
+	print("writing configuration to " + config_file)
+	file = open(config_file, "w")
+	file.write(json.dumps(conf, sort_keys=True, indent=4, separators=(',', ': ')))

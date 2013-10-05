@@ -9,8 +9,8 @@ c.execute("CREATE TABLE music (id INT , bpm INT ,path TEXT);") # create table
 
 music = []
 
-scan_dir = settings.music_path
-ext = settings.music_extensions
+scan_dir = settings.conf["music_path"]
+ext = settings.conf["music_extensions"]
 
 print("Scanning for music files!")
 

@@ -45,7 +45,7 @@ class BPMServer():
     db = sqlite3.connect("music.sqlite")
 
     c = db.cursor()
-    diff = settings.max_diff
+    diff = settings.conf["max_diff"]
     
     server = HTTPserver()
     
