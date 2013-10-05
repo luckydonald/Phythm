@@ -6,7 +6,9 @@ default = {
         "music_path":                   ".",
         "music_extensions":             ["mp3", "flac"],
         "max_diff":                     20,
-        "tick_gpio":                    0
+        "tick_gpio":                    0,
+        "average":						20,  						#TODO: Needs better name
+        "timeout":						5   # value in seconds		#TODO: Needs better name
         }
 
 config_file = "config.json"
@@ -20,7 +22,7 @@ if os.path.exists(config_file):
         conf = default
         needs_update = True
     else:
-        cfg = json.loads()
+        cfg = json.loads(cfgs)
         for key in default.keys():
             if key in cfg:
                 conf[key] = cfg[key]
