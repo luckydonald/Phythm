@@ -60,7 +60,7 @@ class BPMServer():
         "song": {
                 "name": "Songname", 
                 "artist": "Songartist", 
-                "length": 325
+                "length": 325,
                 "bpm":-1
                 },
         "pos": 125
