@@ -84,15 +84,9 @@ class BPMServer():
                 self.bpm = 0
             del self.bpmHistory[0]
             self.bpmHistory.append(self.bpm)
-<<<<<<< HEAD
             self.bpmAverage = (sum(self.bpmHistory)/settings.conf["average"])        #see TODO: Add mechanism to change the length in the config File  
-            print("Run> BPM Statistics: Current BPM is %.2f - Average BPM is %.2f - Difference is %.2f" % (self.bpm,self.bpmAverage, time.time() - self.last_tick) )
-=======
-            self.bpmAverage = (sum(self.bpmHistory) / settings.conf["average"])  
-            print("Run> BPM Statistics: Current BPM is %s - Average BPM is %s - Difference is %s" % (self.bpm,self.bpmAverage, time.time() - self.last_tick) )
->>>>>>> branch 'master' of https://github.com/Phythm/Phythm.git
+            print("Run> BPM Statistics: Current BPM is %03.2f - Average BPM is %03.2f - Difference is %03.2f" % (self.bpm,self.bpmAverage, time.time() - self.last_tick))
             
-
             time.sleep(1)
         
     def bpmTick(self):
