@@ -37,7 +37,7 @@ class HTTPserver(threading.Thread):
     
         httpd = SocketServer.TCPServer(("", self.port), Handler)
     
-        print "serving at port", self.port
+        print "HTTP> Serving at port", self.port
         httpd.serve_forever()
         
 class BPMServer():
@@ -68,7 +68,7 @@ class BPMServer():
     
     def run(self):
         
-        print("Starting HTTP Server!")
+        print("HTTP> Starting HTTP Server!")
         
         self.server.daemon = True
         self.server.bpmServer = self
@@ -89,7 +89,7 @@ class BPMServer():
         #print("Tick! " + str(diff))
         
     def handleCMD(self, cmd):
-        print("Handling:" + cmd)
+        print("HTTP> Handling:" + cmd)
         if cmd.lower() == "info":
             return {"status": 0, "message": self.info}
         else:
