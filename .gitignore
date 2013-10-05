@@ -1,0 +1,10 @@
+/.project
+/.pydevproject
+/settings.pyc
+/server.pyc
+/Phythm.pyc
+/import_music.pyc
+/settings.py
+/music.sqlite
+/iotest.pyc
+/config.json
