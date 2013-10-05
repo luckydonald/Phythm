@@ -51,7 +51,7 @@ class BPMServer():
     
     played = []
     
-    last_tick = time.clock()
+    last_tick = time.time()
     
     bpm = 0
     
@@ -81,7 +81,7 @@ class BPMServer():
             time.sleep(1)
         
     def bpmTick(self):
-        curr = time.clock()
+        curr = time.time()
         diff = curr - self.last_tick
         self.last_tick = curr
         self.bpm = (1.0 / diff) * 60.0
