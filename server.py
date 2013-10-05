@@ -26,7 +26,7 @@ class ModHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
 class HTTPserver(threading.Thread):
     
-    port = 81
+    port = 8080
     
     bpmServer = None
     
@@ -61,6 +61,7 @@ class BPMServer():
                 "name": "Songname", 
                 "artist": "Songartist", 
                 "length": 325
+                "bpm":-1
                 },
         "pos": 125
         }
