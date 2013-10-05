@@ -1,3 +1,4 @@
+import mimetypes
 import sqlite3
 import eyed3
 import glob
@@ -25,11 +26,12 @@ def processFile(currentDir):
 		
 		# Check if it's a normal file or directory
 		if os.path.isfile(curFile):
+			curFileExtension = mimetypes.guess_type(curFile)[0]
+			print('+ Guessing file type: %s' % curFileExtension)
 			# Get the file extension
-			curFileExtension = curFile[-3:]
 			
-			# Check if the file has an extension of typical video files
-			if curFileExtension in ['mp3', 'flac']:
+			# Check if the file has an extension of typical music files
+			if curFileExtension in ['audio/mpeg']:
 				# We have got a audio file! Increment the counter
 				processFile.counter += 1
 				
@@ -43,7 +45,6 @@ def processFile(currentDir):
 				
 			
 
-	
 				
 				
 ############################
@@ -88,18 +89,18 @@ if __name__ == '__main__':
 	
 	print(' |-> Droping old Database')
 	
-	c.execute('''DROP TABLE bpm''')
+	c.execute('''DROP TABLE IF EXISTS bpm''')
 	print(' |-> Creating Database')
 
 	#create table
 	#			
-	#		ID   |  BPM  |  PATH            | COUNT
-	#               0    |  199  |  /music/song.mp3 | 12
+	#		ID   |  BPM  |  PATH            
+	#               0    |  199  |  /music/song.mp3 
 	#
 	print(' |-> Creating Table')
 
 	
-	c.execute('''CREATE TABLE bpm (id  INTEGER PRIMARY KEY, bpm int, path text,count int)''')
+	c.execute('''CREATE TABLE bpm (id  INTEGER PRIMARY KEY, bpm int, path text)''')
 	
 	for file in processFile.list:
 		print(' |')
@@ -112,10 +113,10 @@ if __name__ == '__main__':
 			bpm = -1
 			print(' ||#> changing BPM to : %s' % bpm)
 		print(' ||-> Inserting into Database')
-		print(' ||-> (INSERT INTO bpm VALUES (NULL,%s,"%s",0)' % (bpm, file))
-		c.execute("INSERT INTO bpm VALUES (NULL,%s,\"%s\",0)" % (bpm, file))
+		print(' ||-> (INSERT INTO bpm VALUES (NULL,%s,"%s")' % (bpm, file))
+		c.execute("INSERT INTO bpm VALUES (NULL,%s,\"%s\")" % (bpm, file))
 		print(' |\-> Done.')
 	sqlconn.commit()
 	print(' |-> Commited Database')
 	sqlconn.close()
-	print(' \-> Closed Database')
+	print(' \-> Closed Database')	
