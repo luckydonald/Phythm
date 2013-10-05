@@ -1,4 +1,5 @@
 import mimetypes
+import settings
 import sqlite3
 import eyed3
 import glob
@@ -59,7 +60,7 @@ processFile.counter = -1
 if __name__ == '__main__':
 	# Get the current working directory
 	currentDir = os.getcwd()
-	currentDir = songdir = "/music"
+	currentDir = songdir = settings.music_path #"/music"
 	
 	print('Starting processing in %s' % currentDir)
 	
