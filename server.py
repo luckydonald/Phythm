@@ -52,7 +52,7 @@ class BPMServer():
     played = []
     
     last_tick = time.time()
-    bpmHistory = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0] #TODO: Add mechanism to change the length in the config File
+    bpmHistory = [0] * 20 #TODO: Add mechanism to change the length in the config File
     bpmAverage = 0
     bpm = 0
     
@@ -80,10 +80,13 @@ class BPMServer():
         while True:
             
             #print("Run> Current BPM is %s" % )
+            if self.bpm != 0 and time.time()-self.last_tick>5:
+                self.bpm = 0
             del self.bpmHistory[0]
             self.bpmHistory.append(self.bpm)
-            self.bpmAverage = (sum(self.bpmHistory)/20)        #see TODO: Add mechanism to change the length in the config File
-            print("Run> BPM Statistics: Current BPM is %s - Average BPM is %s" % (self.bpm,self.bpmAverage))
+            self.bpmAverage = (sum(self.bpmHistory)/20)        #see TODO: Add mechanism to change the length in the config File  
+            print("Run> BPM Statistics: Current BPM is %s - Average BPM is %s - Difference is %s" % (self.bpm,self.bpmAverage, time.time() - self.last_tick) )
+            
 
             time.sleep(1)
         
