@@ -68,13 +68,16 @@ mygetrequest.send(null)
 function $(id){
 	return document.getElementById(id);
 }
-function ajaxRefresh(){
-	mygetrequest.open("GET", "/cmd.json?info", true)
+var refreshTimeout;
+
+function ajaxAction(action){
+	mygetrequest.open("GET", "/cmd.json?"+action, true)
 	mygetrequest.send(null)
 	var infostring = dataArray.message.song.name + " by " + dataArray.message.song.artist;
 	$("songtitle").innerHTML=dataArray.message.song.title;
 	$("songartist").innerHTML=dataArray.message.song.artist;	
 	$("songbpm").innerHTML=dataArray.message.song.bpm + " BPM";	
+	//refreshTimeout=window.Timeout(ajaxRefresh, 1000);
 }
 
 
@@ -86,7 +89,8 @@ function ajaxRefresh(){
 	<div id="controls">
 		<input id="prev" type="button" value="&#9665;" /><input id="playpause" type="button" value="&#65517;&nbsp;&#9658;" /><input id="next" type="button" value="&#9655;" />
 	</div>
-<input type="button" onclick='ajaxRefresh()' value="&reg;"/>
+<input type="button" onclick='ajaxAction("info")' value="&reg;"/>
+<input type="button" onclick='ajaxAction("playnext")' value="Force Next"/>
 
 <hr>
 The Pinkie Pie Is A Lie! 
