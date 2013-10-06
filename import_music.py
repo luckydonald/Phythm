@@ -1,4 +1,4 @@
-import sqlite3, settings, eyed3, os
+import sqlite3, settings, eyeD3, os
 
 db = sqlite3.connect("music.sqlite")
 
