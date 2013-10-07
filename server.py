@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import sqlite3, settings, socket, SimpleHTTPServer, SocketServer, threading, time, json, re
-import iotest
-import moc
+
+import eyed3, iotest, moc
  # as seen in https://github.com/jonashaag/python-moc   -  DOC at http://moc.lophus.org/
 
 class ModHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
@@ -170,13 +170,15 @@ class BPMServer():
                 "playingstate": 0 #playing state
                 }
         else:
+            audiofile = eyed3.load(songInfo['file'])
+            bpm = audiofile.tag.bpm
             parsedInfo = {
                 "title": songInfo['songtitle'],
                 "album": songInfo['album'], 
                 "artist": songInfo['artist'], 
                 "currentsec": songInfo['currentsec'],
                 "totalsec": songInfo['currentsec'],
-                "bpm":-42,
+                "bpm":bpm,
                 "file": songInfo['file'],
                 "playingstate": songInfo['state'] #playing state
                 }   
