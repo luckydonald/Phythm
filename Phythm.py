@@ -1,3 +1,9 @@
+#
+#
+# TODO: line 34 - Move MIME Types to setting .json
+#
+#
+
 import mimetypes
 import settings
 import sqlite3
@@ -7,8 +13,8 @@ import os
 
 ############################
  ##########################
-  ##                     ##
-  ##      Functions        ##
+  ##                    ##
+  ##      Functions     ##
   ##                    ##
  ##########################
 ############################
@@ -27,7 +33,7 @@ def processFile(currentDir):
         # Check if it's a normal file or directory
         if os.path.isfile(curFile):
             curFileExtension = mimetypes.guess_type(curFile)[0]
-            print('+ Guessing file type: %s' % curFileExtension)
+            #print('Guessing file type for "%s": %s' %(curFile, curFileExtension))
             # Get the file extension
             
             # Check if the file has an extension of typical music files
@@ -36,11 +42,15 @@ def processFile(currentDir):
                 processFile.counter += 1
                 
                 # Print it's name
-                print('+ Found file: %s' % curFile)
-                processFile.list.append(curFile)
+                audiofile = eyed3.load(curFile)
+                bpm = audiofile.tag.bpm
+                if bpm == None:
+                    bpm = 0
+                print('=> Found fitting \'%s:\' file with %3d BPM: %s '% (curFileExtension,bpm,unicode(curFile)))
+                c.execute("INSERT INTO music VALUES (NULL,?,?)" , (bpm, unicode(curFile)))
         else:
             # We got a directory, enter into it for further processing
-            print('# Found dir: %s' % curFile)
+            #print('# Found dir: %s' % curFile)
             processFile(curFile)
                 
             
@@ -49,8 +59,8 @@ def processFile(currentDir):
                 
 ############################
  ##########################
-  ##                     ##
-  ##         Main        ##
+  ##                    ##
+  ##         Main       ##
   ##                    ##
  ##########################
 ############################
@@ -61,68 +71,36 @@ if __name__ == '__main__':
     currentDir = os.getcwd()
     currentDir = songdir = settings.conf["music_path"]
  #"/music"
-    
+    print('=== Creating Database === ')
+
     print('Starting processing in %s' % currentDir)
     
     # Set the number of processed files equal to zero
     processFile.counter = 0
     processFile.list = []
     
-    # Start Processing
-    processFile(currentDir)
-    
-    # We are done. Continue now. Write Report.
-    print(' -- %s Song File(s) found in directory %s/ --' \
-      % (processFile.counter, currentDir))
-    print(' Press ENTER to continue!')
-    
-    # Wait until the user presses enter/return
-    raw_input()
-    
-    
-    print('=== Creating Database === ')
-    
-    
     sqlconn = sqlite3.connect('music.db')
     
     #lets get a cursor!
     c = sqlconn.cursor()
     
-    print(' |-> Droping old Database')
-    
+    #drop old Database    
     c.execute('''DROP TABLE IF EXISTS music''')
-    print(' |-> Creating Database')
 
     #create table
     #            
     #        ID     |  BPM  |  PATH            
     #        0      |  199  |  /music/song.mp3 
     #
-    print(' |-> Creating Table')
+    #print(' |-> Creating Table')
 
     
     c.execute('''CREATE TABLE music (id  INTEGER PRIMARY KEY, bpm int, path text)''')
     
-    for file in processFile.list:
-        print(' |')
-        print(' |--> Processing file %s' % file)
-        print(' ||-> Getting Data')
-        audiofile = eyed3.load(file)
-        bpm = audiofile.tag.bpm
-        print(' ||-> BPM: %s' % bpm)
-        if bpm == None:
-            bpm = -1
-            print(' ||#> changing BPM to : %s' % bpm)
-        print(' ||-> Inserting into Database')
-        print(' ||-> (INSERT INTO music VALUES (NULL,%s,"%s")' % (bpm, unicode(file)))
-        c.execute("INSERT INTO music VALUES (NULL,?,?)" , (bpm, unicode(file)))
-        print(' |\-> Done.')
+    # Start Processing
+    processFile(currentDir)
+    
     sqlconn.commit()
-    print(' |-> Commited Database')
-    print(' |-> Checking Database')
-
-    for row in c.execute('SELECT * FROM music ORDER BY bpm'):
-        print(row)
-    print(' |-> Closing Database')
     sqlconn.close()
-    print(' \-> Closed Database')    
+
+
