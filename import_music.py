@@ -25,6 +25,7 @@ def scan(top):
     print("Scanning: " + top)
     list = []
     for f in os.listdir(top):
+        f = os.path.join(top, f)
         if os.path.isdir(f):
             for file in scan(f):
                 list.append(file)
