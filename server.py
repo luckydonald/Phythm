@@ -59,12 +59,15 @@ class BPMServer():
     info = {
         "bpm": 0,
         "song": {
-                "title": "Songname", 
+                "title": "Songname",
+                "album": "Songalbum", 
                 "artist": "Songartist", 
-                "length": 325,
-                "bpm":-1
+                "currentsec": 325,
+                "totalsec": 125,
+                "bpm":-1,
+                "file": "/music/songname.mp3",
+                "playingstate": 2 #playing state ( 0=stopped; 1=paused; 2=playing )
                 },
-        "pos": 125
         }
     
     def run(self):
@@ -84,7 +87,8 @@ class BPMServer():
                 self.bpm = 0
             del self.bpmHistory[0]
             self.bpmHistory.append(self.bpm)
-            self.info["bpm"] = self.bpmAverage = (sum(self.bpmHistory)/settings.conf["average"]) 
+            self.bpmAverage = (sum(self.bpmHistory)/settings.conf["average"])
+            self.info["bpm"] = self.bpmAverage 
             print("Run> BPM Statistics: Current BPM is %03.2f - Average BPM is %03.2f - Difference is %03.2f" % (self.bpm,self.bpmAverage, time.time() - self.last_tick))
             
             time.sleep(1)
@@ -103,16 +107,31 @@ class BPMServer():
         print("HTTP> Handling:" + cmd)
         if cmd.lower() == "info":
             return {"status": 0, "message": self.info}
-        if cmd.lower() == "playnext":
+            
+        if cmd.lower() == "forcenext":
             songToPlay = self.getBestMatch(self.bpmAverage,self.diff)
             print("CMD> New Song: %s" % songToPlay[2])
             self.playSong(songToPlay[2])
+            self.updatePlayerStatisInfo()
             return {"status": 0, "message": self.info}
+            
+        if cmd.lower() == "playpause":
+            songToPlay = self.getBestMatch(self.bpmAverage,self.diff)
+            print("CMD> New Song: %s" % songToPlay[2])
+            self.playSong(songToPlay[2])
+            if moc.is_playing():
+                moc.pause()
+            else:
+                moc.resume()
+            self.updatePlayerStatisInfo()
+            print("CMD> updated self.info")
+            print(self.info)
+            return {"status": 0, "message": self.info}
+            
         else:
             return {"status": -1, "message": "Error: command " + cmd + " not found"}
     
     def getBestMatch(self,bpm,diff):
-        #global played
         db = sqlite3.connect("music.db") #changed extention
         c = db.cursor()
         c.execute('SELECT * FROM "music" WHERE "bpm" >= ? AND "bpm" <= ? ORDER BY ABS("bpm" - ?) ASC;', (bpm - diff, bpm + diff, bpm))
@@ -125,32 +144,54 @@ class BPMServer():
             print(song)
             return song #stop here
             
-            #if song[0] in played:
-            #    continue
-            #played += [song[0]]
-            #return song[2]
-        #played = []
+            #TODO: Need to re implement Played-System 
+            
+            
         db.close()
-        #return self.getBestMatch(bpm,diff)
+        return self.getBestMatch(bpm,diff+5)
         
     def playSong(self,file):
-        return moc.quickplay([file]);
+        songInfo = moc.quickplay([file])
+        return songInfo
     
+    def getPlayerStatus(self):
+        songInfo = moc.info()
+        print("getPlyrStats> moc.info() returns")
+        print(songInfo)
+        if songInfo['state']==0:
+            parsedInfo = {
+                "title": "-",
+                "album": "-", 
+                "artist": "-", 
+                "currentsec": 0,
+                "totalsec": 0,
+                "bpm":0,
+                "file": "",
+                "playingstate": 0 #playing state
+                }
+        else:
+            parsedInfo = {
+                "title": songInfo['songtitle'],
+                "album": songInfo['album'], 
+                "artist": songInfo['artist'], 
+                "currentsec": songInfo['currentsec'],
+                "totalsec": songInfo['currentsec'],
+                "bpm":-42,
+                "file": songInfo['file'],
+                "playingstate": songInfo['state'] #playing state
+                }   
+        return parsedInfo
+    def updatePlayerStatisInfo(self):
+        self.info["song"] = self.getPlayerStatus()
     
+    def softQuit(self):
+        moc.stop()
+        moc.stop_server()
+        self.server.stop()
+        #TODO: insert boolean 'running' in while true, so it is nice and neat.
 
-print("INIT> [SKIPED] starting moc server.")        
+print("INIT> [SKIPPED] starting moc server.")        
 #moc.start_server()
 print("INIT> starting bmp server.")        
 BPMServer().run()
 print("INIT> started both servers.")
-#s = socket.socket()
-
-#s.bind(("", 8000))
-
-#s.listen(1)
-
-#conn, addr = s.accept()
-
-#print(addr)
-
-#db.commit()
