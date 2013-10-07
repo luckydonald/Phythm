@@ -1,6 +1,8 @@
+#!/usr/bin/env python
 import sqlite3, settings, socket, SimpleHTTPServer, SocketServer, threading, time, json, re
 import iotest
-import moc # as seen in https://github.com/jonashaag/python-moc   -  DOC at http://moc.lophus.org/
+import moc
+ # as seen in https://github.com/jonashaag/python-moc   -  DOC at http://moc.lophus.org/
 
 class ModHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     
@@ -43,8 +45,6 @@ class HTTPserver(threading.Thread):
         
 class BPMServer():
     
-    db = sqlite3.connect("music.sqlite")
-    c = db.cursor()
     diff = settings.conf["max_diff"]
     
     server = HTTPserver()
@@ -105,28 +105,44 @@ class BPMServer():
             return {"status": 0, "message": self.info}
         if cmd.lower() == "playnext":
             songToPlay = self.getBestMatch(self.bpmAverage,self.diff)
-            print("CMD> New Song: %s" % songToPlay)
-            self.playSong(songToPlay)
+            print("CMD> New Song: %s" % songToPlay[2])
+            self.playSong(songToPlay[2])
             return {"status": 0, "message": self.info}
         else:
             return {"status": -1, "message": "Error: command " + cmd + " not found"}
     
     def getBestMatch(self,bpm,diff):
-        global played
-        self.c.execute('SELECT * FROM "music" WHERE "bpm" >= ? AND "bpm" <= ? ORDER BY ABS("bpm" - ?) ASC;', (bpm - diff, bpm + diff, bpm))
-        for song in self.c:
-            if song[0] in played:
-                continue
-            played += [song[0]]
-            return song[2]
-        played = []
-        return getBestMatch(bpm)
+        #global played
+        db = sqlite3.connect("music.db") #changed extention
+        c = db.cursor()
+        c.execute('SELECT * FROM "music" WHERE "bpm" >= ? AND "bpm" <= ? ORDER BY ABS("bpm" - ?) ASC;', (bpm - diff, bpm + diff, bpm))
+        print("Match> DB is %s" % c)
+        for song in c: 
+                            # (index, bpm, file)  #index starts at 1!
+                            # (1, -1, u'/music/SUBFOLDER/(I Want to Wear) Yellow & Blue - TalkAcanthi - Rocking is Magic.mp3')
+
+            print("Match> Song is %s" % song[2])
+            print(song)
+            return song #stop here
+            
+            #if song[0] in played:
+            #    continue
+            #played += [song[0]]
+            #return song[2]
+        #played = []
+        db.close()
+        #return self.getBestMatch(bpm,diff)
         
     def playSong(self,file):
-        moc.quickplay([file]);
-        
-moc.start_server()
+        return moc.quickplay([file]);
+    
+    
+
+print("INIT> [SKIPED] starting moc server.")        
+#moc.start_server()
+print("INIT> starting bmp server.")        
 BPMServer().run()
+print("INIT> started both servers.")
 #s = socket.socket()
 
 #s.bind(("", 8000))
