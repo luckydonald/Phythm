@@ -1,5 +1,6 @@
 import sqlite3, settings, socket, SimpleHTTPServer, SocketServer, threading, time, json, re
 import iotest
+import moc # as seen in https://github.com/jonashaag/python-moc   -  DOC at http://moc.lophus.org/
 
 class ModHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     
@@ -43,7 +44,6 @@ class HTTPserver(threading.Thread):
 class BPMServer():
     
     db = sqlite3.connect("music.sqlite")
-
     c = db.cursor()
     diff = settings.conf["max_diff"]
     
@@ -84,7 +84,7 @@ class BPMServer():
                 self.bpm = 0
             del self.bpmHistory[0]
             self.bpmHistory.append(self.bpm)
-            self.bpmAverage = (sum(self.bpmHistory)/settings.conf["average"])        #see TODO: Add mechanism to change the length in the config File  
+            self.info["bpm"] = self.bpmAverage = (sum(self.bpmHistory)/settings.conf["average"]) 
             print("Run> BPM Statistics: Current BPM is %03.2f - Average BPM is %03.2f - Difference is %03.2f" % (self.bpm,self.bpmAverage, time.time() - self.last_tick))
             
             time.sleep(1)
@@ -103,13 +103,18 @@ class BPMServer():
         print("HTTP> Handling:" + cmd)
         if cmd.lower() == "info":
             return {"status": 0, "message": self.info}
+        if cmd.lower() == "playnext":
+            songToPlay = self.getBestMatch(self.bpmAverage,self.diff)
+            print("CMD> New Song: %s" % songToPlay)
+            self.playSong(songToPlay)
+            return {"status": 0, "message": self.info}
         else:
             return {"status": -1, "message": "Error: command " + cmd + " not found"}
     
-    def getBestMatch(bpm):
+    def getBestMatch(self,bpm,diff):
         global played
-        c.execute('SELECT * FROM "music" WHERE "bpm" >= ? AND "bpm" <= ? ORDER BY ABS("bpm" - ?) ASC;', (bpm - diff, bpm + diff, bpm))
-        for song in c:
+        self.c.execute('SELECT * FROM "music" WHERE "bpm" >= ? AND "bpm" <= ? ORDER BY ABS("bpm" - ?) ASC;', (bpm - diff, bpm + diff, bpm))
+        for song in self.c:
             if song[0] in played:
                 continue
             played += [song[0]]
@@ -117,8 +122,10 @@ class BPMServer():
         played = []
         return getBestMatch(bpm)
         
-
-
+    def playSong(self,file):
+        moc.quickplay([file]);
+        
+moc.start_server()
 BPMServer().run()
 #s = socket.socket()
 
