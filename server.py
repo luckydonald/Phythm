@@ -106,6 +106,7 @@ class BPMServer():
     def handleCMD(self, cmd):
         print("HTTP> Handling:" + cmd)
         if cmd.lower() == "info":
+            self.updatePlayerStatisInfo()
             return {"status": 0, "message": self.info}
             
         if cmd.lower() == "forcenext":
@@ -177,7 +178,7 @@ class BPMServer():
                 "album": songInfo['album'], 
                 "artist": songInfo['artist'], 
                 "currentsec": songInfo['currentsec'],
-                "totalsec": songInfo['currentsec'],
+                "totalsec": songInfo['totalsec'],
                 "bpm":bpm,
                 "file": songInfo['file'],
                 "playingstate": songInfo['state'] #playing state
