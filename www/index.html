@@ -1,30 +1,29 @@
 <html>
-<title> Wubaduba diuah.</title>
+<head>
+<title> May Contain Ponys.</title>
+<style>
+#controls span 
+{
+	background-color: yellow;
+}
+.progressbar-outer{
+	width:300px;
+	padding:2px;
+	background-color:white;
+	border:1px solid black;
+	text-align:center
+}
+.progressbar-inner{
+	width:0px;
+	background-color:green;	
+}
+
+</style>
+</head>
 <body>
 <h1>Test</h1>
 
-<script>
 
-function DoRequest(){
-
-     var xmlHttp = createXmlHttpRequestObject();
-
-    try {
-    xmlHttp.open("GET", "/cmd.json?info",true);
-    xmlHttp.onreadystatechange = function() {
-        if (xmlHttp.readyState == 4 && xmlHttp.status==200){
-        var myJSONObject =  JSON.parse(xmlHttp.responseText)
-        alert(myJSONObject.communication[0].communication_name)
-         }
-    }
-    xmlHttp.send(null);
-
-    } catch (e){
-    alert("Can't connect to server:\n" + e.toString());
-    }
-}
-
-</script>
 
 
 
@@ -51,10 +50,10 @@ function ajaxRequest(){
 var mygetrequest=new ajaxRequest()
 mygetrequest.onreadystatechange=function(){
  if (mygetrequest.readyState==4){
-  if (mygetrequest.status==200 || window.location.href.indexOf("http")==-1){
-   //var jsondata=eval("("+mygetrequest.responseText+")") //retrieve result as an JavaScript object
+  if (mygetrequest.status==200 ){ //|| window.location.href.indexOf("http")==-1
+ //var jsondata=eval("("+mygetrequest.responseText+")") //retrieve result as an JavaScript object
    var jsondata = JSON.parse(mygetrequest.responseText);
-   dataArray = jsondata;
+   applyInfos(jsondata);
 
   }
   else{
@@ -62,35 +61,59 @@ mygetrequest.onreadystatechange=function(){
   }
  }
 }
-var dataArray;
-mygetrequest.open("GET", "/cmd.json?info", true)	
-mygetrequest.send(null)
+var globalDataArray;
+//mygetrequest.open("GET", "/cmd.json?info", true)	
+//mygetrequest.send(null)
 function $(id){
 	return document.getElementById(id);
 }
 var refreshTimeout;
 
 function ajaxAction(action){
-	mygetrequest.open("GET", "/cmd.json?"+action, true)
-	mygetrequest.send(null)
-	var infostring = dataArray.message.song.name + " by " + dataArray.message.song.artist;
-	$("songtitle").innerHTML=dataArray.message.song.title;
-	$("songartist").innerHTML=dataArray.message.song.artist;	
-	$("songbpm").innerHTML=dataArray.message.song.bpm + " BPM";	
+	mygetrequest.open("GET", "/cmd.json?"+action, true);
+	mygetrequest.send(null);
+	dataArray = mygetrequest.dataArray;
+		
 	//refreshTimeout=window.Timeout(ajaxRefresh, 1000);
 }
+function applyInfos(dataArray){
+	var infostring = dataArray.message.song.name + " by " + dataArray.message.song.artist;
+	document.title = infostring;
+	$("songtitle").innerHTML=dataArray.message.song.title;
+	$("songalbum").innerHTML=dataArray.message.song.album;	
+	$("songartist").innerHTML=dataArray.message.song.artist;	
+	$("songbpm").innerHTML=dataArray.message.song.bpm + " BPM";
+	var max = dataArray.message.song.totalsec;
+	var max_date = new Date(max*1000);
+	var curr = dataArray.message.song.currentsec;
+	var curr_date = new Date(curr*1000);
+	var progress = Math.round((100/max)*curr);	
+	//alert("( 100 / "+ max + " ) * " + curr + " = " + progress);
+	var curr_string= curr_date.getMinutes() +":"+curr_date.getSeconds()
+	var x = document.getElementById("songprogress");
+	x.style.width=progress*2;
+	x.innerHTML=curr_string;
+}
+
 
 
 </script>
 <div id="infobox">
 	<div id="songinfo">
-		<span id="songtitle">Unknown Title</span> - <span id="songartist">Unknown Artist<span> @ <span id="songbpm">-1 BPM</span>
+		<span id="songtitle">Unknown Title</span> - <span id="songalbum">Unknown Album</span> - <span id="songartist">Unknown Artist</span> @ <span id="songbpm">0 BPM</span>		
+	</div>
+	<div id="songinfo2">
+		<div class="progressbar-outer">
+			<div class="progressbar-inner" id="songprogress">--:--</div>
+		</div>
 	</div>
 	<div id="controls">
-		<input id="prev" type="button" value="&#9665;" /><input id="playpause" type="button" value="&#65517;&nbsp;&#9658;" /><input id="next" type="button" value="&#9655;" />
+		<input id="prev" type="button" value="&#9665;" onclick='ajaxAction("playlast")'/>
+		<input id="playpause" type="button" value="&#65517;&nbsp;&#9658;" onclick='ajaxAction("playpause")'/>
+		<input id="next" type="button" onclick='ajaxAction("playnext")' value="&#9655;" />
 	</div>
 <input type="button" onclick='ajaxAction("info")' value="&reg;"/>
-<input type="button" onclick='ajaxAction("playnext")' value="Force Next"/>
+<input type="button" onclick='ajaxAction("forcenext")' value="Force Next"/>
 
 <hr>
 The Pinkie Pie Is A Lie! 
