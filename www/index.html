@@ -1,5 +1,8 @@
-<html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+ "http://www.w3.org/TR/xhtml1/DTD/Strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
 <title> May Contain Ponys.</title>
 <style>
 #infobox 
@@ -63,7 +66,7 @@ mygetrequest.onreadystatechange=function(){
 
   }
   else{
-   alert("An error has occured making the request")
+   //alert("An error has occured making the request")
   }
  }
 }
@@ -83,7 +86,7 @@ function ajaxAction(action){
 	//refreshTimeout=window.Timeout(ajaxRefresh, 1000);
 }
 function applyInfos(dataArray){
-	var infostring = dataArray.message.song.name + " by " + dataArray.message.song.artist;
+	var infostring =  (dataArray.message.song.playingstate != 2 ? "Not Playing." : "Playing " + dataArray.message.song.title + " by " + dataArray.message.song.artist );
 	document.title = infostring;
 	$("songtitle").innerHTML=dataArray.message.song.title;
 	$("songalbum").innerHTML=dataArray.message.song.album;	
@@ -91,24 +94,21 @@ function applyInfos(dataArray){
 	$("songbpm").innerHTML=dataArray.message.song.bpm + " BPM";
 	var max = dataArray.message.song.totalsec;
 	var curr = dataArray.message.song.currentsec;
-	var progress = Math.round((100/max)*curr);	
+	var progress = ((100/max)*curr);	
 	//alert("( 100 / "+ max + " ) * " + curr + " = " + progress);
 	var progressbar = $("songprogress");
-	progresspx = progress*3; //factor x3
-	if (progresspx < 20)
-	{
-		progresspx=20;
-	}
+	progresspx = Math.round(progress*3); //factor x3
+	progress = Math.round(progress);
+
 	
-	if (progresspx < ((100*3) - 20) ) //factor x3
-	{
-		progressbar.style.borderRadius="20px 0px 0px 20px";
-	}
-	else
-	{
-		progressbar.style.borderRadius="20px";
-	}
-	progressbar.style.width=progresspx;
+	var remaining = progresspx-(100*3)+20; //factor x3
+	remaining = (remaining > 0 && remaining != Number.NaN ? remaining : 0);
+	styleStr = "20px " + remaining + "px " + remaining + "px 20px";
+	progresspx = (progresspx < 10 ? 10 : progresspx);
+	
+	progressbar.style.borderRadius=styleStr;
+	progressbar.style.width=(dataArray.message.song.playingstate != 2 ? 0 : progresspx) + "px";
+	
 	progressbar.innerHTML=secondsToTomeString(curr);
 	$("songtotal").innerHTML = secondsToTomeString(max);
 }
