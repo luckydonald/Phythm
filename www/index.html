@@ -2,20 +2,26 @@
 <head>
 <title> May Contain Ponys.</title>
 <style>
-#controls span 
+#infobox 
 {
-	background-color: yellow;
+	background-color: #f0f0f0;
+	border-radius: 5px;
+	padding: 5px;
 }
 .progressbar-outer{
 	width:300px;
 	padding:2px;
-	background-color:white;
-	border:1px solid black;
-	text-align:center
+	background-color:grey;
+	//border:1px solid black;
+	border-radius: 20px;
+	text-align:center;
 }
 .progressbar-inner{
 	width:0px;
-	background-color:green;	
+	background-color:lightgreen;
+	//border:1px solid lightgreen;
+	border-radius: 20px;
+	
 }
 
 </style>
@@ -72,7 +78,7 @@ var refreshTimeout;
 function ajaxAction(action){
 	mygetrequest.open("GET", "/cmd.json?"+action, true);
 	mygetrequest.send(null);
-	dataArray = mygetrequest.dataArray;
+	//dataArray = mygetrequest.dataArray;
 		
 	//refreshTimeout=window.Timeout(ajaxRefresh, 1000);
 }
@@ -84,37 +90,62 @@ function applyInfos(dataArray){
 	$("songartist").innerHTML=dataArray.message.song.artist;	
 	$("songbpm").innerHTML=dataArray.message.song.bpm + " BPM";
 	var max = dataArray.message.song.totalsec;
-	var max_date = new Date(max*1000);
 	var curr = dataArray.message.song.currentsec;
-	var curr_date = new Date(curr*1000);
 	var progress = Math.round((100/max)*curr);	
 	//alert("( 100 / "+ max + " ) * " + curr + " = " + progress);
-	var curr_string= curr_date.getMinutes() +":"+curr_date.getSeconds()
-	var x = document.getElementById("songprogress");
-	x.style.width=progress*2;
-	x.innerHTML=curr_string;
+	var progressbar = $("songprogress");
+	progresspx = progress*3; //factor x3
+	if (progresspx < 20)
+	{
+		progresspx=20;
+	}
+	
+	if (progresspx < ((100*3) - 20) ) //factor x3
+	{
+		progressbar.style.borderRadius="20px 0px 0px 20px";
+	}
+	else
+	{
+		progressbar.style.borderRadius="20px";
+	}
+	progressbar.style.width=progresspx;
+	progressbar.innerHTML=secondsToTomeString(curr);
+	$("songtotal").innerHTML = secondsToTomeString(max);
+}
+function secondsToTomeString(seconds){
+	var dateObj = new Date(seconds*1000);
+	return ( dateObj.getHours()<1 ? dateObj.getHours()+":" : "" ) + ( dateObj.getMinutes()<10 ? "0" : "") + dateObj.getMinutes() + ":" + (dateObj.getSeconds()<10 ? "0" : "") + dateObj.getSeconds() 
 }
 
-
+function refreshInfos(){
+	ajaxAction("info");
+	window.setTimeout("refreshInfos()", 1000);
+}
+window.setTimeout("refreshInfos()", 1000);
 
 </script>
 <div id="infobox">
 	<div id="songinfo">
-		<span id="songtitle">Unknown Title</span> - <span id="songalbum">Unknown Album</span> - <span id="songartist">Unknown Artist</span> @ <span id="songbpm">0 BPM</span>		
+		<span id="songtitle">Unknown Title</span> - <span id="songalbum">Unknown Album</span> - <span id="songartist">Unknown Artist</span>  <span id="songbpm">0 BPM</span>		
 	</div>
 	<div id="songinfo2">
-		<div class="progressbar-outer">
+		<div class="progressbar-outer" style="display:inline-block;">
 			<div class="progressbar-inner" id="songprogress">--:--</div>
 		</div>
+		<div id="songtotal" style="display:inline-block;">--:--</div><br />
 	</div>
 	<div id="controls">
 		<input id="prev" type="button" value="&#9665;" onclick='ajaxAction("playlast")'/>
 		<input id="playpause" type="button" value="&#65517;&nbsp;&#9658;" onclick='ajaxAction("playpause")'/>
 		<input id="next" type="button" onclick='ajaxAction("playnext")' value="&#9655;" />
 	</div>
-<input type="button" onclick='ajaxAction("info")' value="&reg;"/>
-<input type="button" onclick='ajaxAction("forcenext")' value="Force Next"/>
-
+	<input type="button" onclick='ajaxAction("info")' value="&reg;"/>
+	<input type="button" onclick='ajaxAction("forcenext")' value="Force Next"/>
+</div>
+<br>
+<br>
+<br>
+<br>
 <hr>
 The Pinkie Pie Is A Lie! 
 </body>
