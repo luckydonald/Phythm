@@ -53,14 +53,15 @@ class BPMServer():
     
     server = HTTPserver()
     
-    played = []
+    playing_index = 0
+    played_history = []
     
     last_tick = time.time()
     bpmHistory = [0] * settings.conf["average"]
     bpmAverage = 0
     bpm = 0
     keep_running = True
-    played=[]
+    
     shutdownCommand = "0000" #default, overwritten later.
     info = {
         "bpm": 0,
@@ -95,7 +96,7 @@ class BPMServer():
             self.bpmHistory.append(self.bpm)
             self.bpmAverage = (sum(self.bpmHistory)/settings.conf["average"])
             self.info["bpm"] = self.bpmAverage 
-            print("Run> %s BPM Statistics: Current BPM is %03.2f - Average BPM is %03.2f - Difference is %03.2f" % (self.keep_running, self.bpm,self.bpmAverage, time.time() - self.last_tick))
+            #print("Run> %s BPM Statistics: Current BPM is %03.2f - Average BPM is %03.2f - Difference is %03.2f" % (self.keep_running, self.bpm,self.bpmAverage, time.time() - self.last_tick))
             
             time.sleep(1)
         
@@ -124,12 +125,10 @@ class BPMServer():
             
         if cmd.lower() == "playpause":
             songToPlay = self.getBestMatch(self.bpmAverage,self.diff)
-            print("CMD> New Song: %s" % songToPlay[2])
-            self.playSong(songToPlay[2])
             if moc.is_playing():
                 moc.pause()
             else:
-                moc.resume()
+                moc.unpause()
             self.updatePlayerStatisInfo()
             print("CMD> updated self.info")
             print(self.info)
@@ -150,10 +149,11 @@ class BPMServer():
 
             print("Match> Song is %s" % song[2])
             print(song)
-            if song in self.played:
+            if song in self.played_history:
                 print("Match> Already played, skipping.")
                 continue
-            self.played.append(song)
+            self.played_history.append(song)
+            self.playing_index=self.playing_index + 1 #TODO: has python ++ ?
             return song #stop here
             
             #TODO: Need to re implement Already-Played-System 
