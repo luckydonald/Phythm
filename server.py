@@ -1,8 +1,10 @@
 #!/usr/bin/env python
-import sqlite3, settings, socket, SimpleHTTPServer, SocketServer, threading, time, json, re
-
+import json, random, re, sqlite3, settings, string, socket, SimpleHTTPServer, SocketServer, threading, time
+import signal
 import eyed3, iotest, moc
  # as seen in https://github.com/jonashaag/python-moc   -  DOC at http://moc.lophus.org/
+
+
 
 class ModHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     
@@ -29,7 +31,7 @@ class ModHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
 class HTTPserver(threading.Thread):
     
-    port = 8080
+    port = settings.conf["port"]
     
     bpmServer = None
     
@@ -44,6 +46,8 @@ class HTTPserver(threading.Thread):
         httpd.serve_forever()
         
 class BPMServer():
+    def stringGenerator(self,length):
+        return ''.join(random.choice(string.lowercase) for i in range(length))
     
     diff = settings.conf["max_diff"]
     
@@ -55,7 +59,9 @@ class BPMServer():
     bpmHistory = [0] * settings.conf["average"]
     bpmAverage = 0
     bpm = 0
-    
+    keep_running = True
+    played=[]
+    shutdownCommand = "0000" #default, overwritten later.
     info = {
         "bpm": 0,
         "song": {
@@ -73,23 +79,23 @@ class BPMServer():
     def run(self):
         
         print("HTTP> Starting HTTP Server!")
-        
+
         self.server.daemon = True
         self.server.bpmServer = self
         self.server.start()
         
         iotest.start(self)
-        
-        while True:
+        self.shutdownCommand = self.stringGenerator(6)  #shutdown via webUI
+        print("To Shut down please visit http://localhost:%s/cmd.json?%s via your Browser." % (settings.conf["port"],self.shutdownCommand))
+        while (self.keep_running == True):
             
-            #print("Run> Current BPM is %s" % )
             if self.bpm != 0 and time.time()-self.last_tick>settings.conf["timeout"]:
                 self.bpm = 0
             del self.bpmHistory[0]
             self.bpmHistory.append(self.bpm)
             self.bpmAverage = (sum(self.bpmHistory)/settings.conf["average"])
             self.info["bpm"] = self.bpmAverage 
-            print("Run> BPM Statistics: Current BPM is %03.2f - Average BPM is %03.2f - Difference is %03.2f" % (self.bpm,self.bpmAverage, time.time() - self.last_tick))
+            print("Run> %s BPM Statistics: Current BPM is %03.2f - Average BPM is %03.2f - Difference is %03.2f" % (self.keep_running, self.bpm,self.bpmAverage, time.time() - self.last_tick))
             
             time.sleep(1)
         
@@ -129,23 +135,28 @@ class BPMServer():
             print(self.info)
             return {"status": 0, "message": self.info}
             
+        if cmd.lower() == self.shutdownCommand:
+            self.softQuit();
         else:
             return {"status": -1, "message": "Error: command " + cmd + " not found"}
     
     def getBestMatch(self,bpm,diff):
         db = sqlite3.connect("music.db") #changed extention
         c = db.cursor()
-        c.execute('SELECT * FROM "music" WHERE "bpm" >= ? AND "bpm" <= ? ORDER BY ABS("bpm" - ?) ASC;', (bpm - diff, bpm + diff, bpm))
-        print("Match> DB is %s" % c)
+        c.execute('SELECT * FROM "music" WHERE "bpm" >= ? AND "bpm" <= ? ORDER BY ABS("bpm" - ?) ASC;', (bpm - diff, bpm + diff, bpm)) #TODO bpm / 2, bpm * 2 
         for song in c: 
                             # (index, bpm, file)  #index starts at 1!
                             # (1, -1, u'/music/SUBFOLDER/(I Want to Wear) Yellow & Blue - TalkAcanthi - Rocking is Magic.mp3')
 
             print("Match> Song is %s" % song[2])
             print(song)
+            if song in self.played:
+                print("Match> Already played, skipping.")
+                continue
+            self.played.append(song)
             return song #stop here
             
-            #TODO: Need to re implement Played-System 
+            #TODO: Need to re implement Already-Played-System 
             
             
         db.close()
@@ -153,6 +164,7 @@ class BPMServer():
         
     def playSong(self,file):
         songInfo = moc.quickplay([file])
+        
         return songInfo
     
     def getPlayerStatus(self):
@@ -186,15 +198,49 @@ class BPMServer():
         return parsedInfo
     def updatePlayerStatisInfo(self):
         self.info["song"] = self.getPlayerStatus()
+        
     
+
     def softQuit(self):
-        moc.stop()
-        moc.stop_server()
-        self.server.stop()
+        print("=== Shutting down ===")
+        try:
+            moc.stop()
+            print("DOWN> stopping moc server.")
+            moc.stop_server()
+        except MocNotRunning:
+            print("DOWN> already stopped moc server.")  
+        keep_running = False
+        print("=== Shutting down ===")
+
         #TODO: insert boolean 'running' in while true, so it is nice and neat.
 
-print("INIT> [SKIPPED] starting moc server.")        
-#moc.start_server()
-print("INIT> starting bmp server.")        
+"""
+def handler(signum, frame):
+    print "Forever is over!"
+    raise Exception("end of time")
+
+def start_server():
+    print("INIT> starting moc server.")
+    try:      
+        moc.start_server()
+    except moc.MocError:
+        print("INIT> moc server already running.") 
+        signal.alarm(0)
+
+signal.signal(signal.SIGALRM, handler)
+signal.alarm(10)
+try:
+    start_server()
+except Exception, exc: 
+    print exc
+
+#handler(None,None)
+signal.alarm(0)
+"""
+
+print("INIT> starting bmp server.")  
 BPMServer().run()
 print("INIT> started both servers.")
+#keep_running = True    
+  
+
