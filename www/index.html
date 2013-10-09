@@ -1,152 +1,235 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
- "http://www.w3.org/TR/xhtml1/DTD/Strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
-<head>
-<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
-<title> May Contain Ponys.</title>
-<style>
-#infobox 
-{
-	background-color: #f0f0f0;
-	border-radius: 5px;
-	padding: 5px;
-}
-.progressbar-outer{
-	width:300px;
-	padding:2px;
-	background-color:grey;
-	//border:1px solid black;
-	border-radius: 20px;
-	text-align:center;
-}
-.progressbar-inner{
-	width:0px;
-	background-color:lightgreen;
-	//border:1px solid lightgreen;
-	border-radius: 20px;
+	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	 "http://www.w3.org/TR/xhtml1/DTD/Strict.dtd">
+	<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+	<head>
+	<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+	<title> May Contain Ponys.</title>
+	<style>
+	body
+	{
+		width:400px;
 	
-}
-
-</style>
-</head>
-<body>
-<h1>Test</h1>
-
-
-
-
-
-<script type="text/javascript">
-
-function ajaxRequest(){
- var activexmodes=["Msxml2.XMLHTTP", "Microsoft.XMLHTTP"] //activeX versions to check for in IE
- if (window.ActiveXObject){ //Test for support for ActiveXObject in IE first (as XMLHttpRequest in IE7 is broken)
-  for (var i=0; i<activexmodes.length; i++){
-   try{
-    return new ActiveXObject(activexmodes[i])
-   }
-   catch(e){
-    //suppress error
-   }
-  }
- }
- else if (window.XMLHttpRequest) // if Mozilla, Safari etc
-  return new XMLHttpRequest()
- else
-  return false
-}
-
-var mygetrequest=new ajaxRequest()
-mygetrequest.onreadystatechange=function(){
- if (mygetrequest.readyState==4){
-  if (mygetrequest.status==200 ){ //|| window.location.href.indexOf("http")==-1
- //var jsondata=eval("("+mygetrequest.responseText+")") //retrieve result as an JavaScript object
-   var jsondata = JSON.parse(mygetrequest.responseText);
-   applyInfos(jsondata);
-
-  }
-  else{
-   //alert("An error has occured making the request")
-  }
- }
-}
-var globalDataArray;
-//mygetrequest.open("GET", "/cmd.json?info", true)	
-//mygetrequest.send(null)
-function $(id){
-	return document.getElementById(id);
-}
-var refreshTimeout;
-
-function ajaxAction(action){
-	mygetrequest.open("GET", "/cmd.json?"+action, true);
-	mygetrequest.send(null);
-	//dataArray = mygetrequest.dataArray;
+	}
+	#infobox 
+	{
+		background-color: #f0f0f0;
+		border-radius: 5px;
+		padding: 5px;
+		width:400px;
+	}
+	#bpm
+	{
+		font-size:3em;	
+	}
+	.progressbar-outer
+	{
+		width:300px;
+		padding:2px;
+		background-color:grey;
 		
-	//refreshTimeout=window.Timeout(ajaxRefresh, 1000);
-}
-function applyInfos(dataArray){
-	var infostring =  (dataArray.message.song.playingstate != 2 ? "Not Playing." : "Playing " + dataArray.message.song.title + " by " + dataArray.message.song.artist );
-	document.title = infostring;
-	$("songtitle").innerHTML=dataArray.message.song.title;
-	$("songalbum").innerHTML=dataArray.message.song.album;	
-	$("songartist").innerHTML=dataArray.message.song.artist;	
-	$("songbpm").innerHTML=dataArray.message.song.bpm + " BPM";
-	var max = dataArray.message.song.totalsec;
-	var curr = dataArray.message.song.currentsec;
-	var progress = ((100/max)*curr);	
-	//alert("( 100 / "+ max + " ) * " + curr + " = " + progress);
-	var progressbar = $("songprogress");
-	progresspx = Math.round(progress*3); //factor x3
-	progress = Math.round(progress);
+		//border:1px solid black;
+		border-radius: 20px;
+		text-align:center;
+	}
+	.progressbar-inner
+	{
+		width:0px;
+		background-color:orange;
+		//border:1px solid lightgreen;
+		border-radius: 20px;
+		
+	}
+	.left
+	{
+		float: left;
+	} 
+	.right
+	{ 
+		float: right;
+	}
+	#songnotplaying
+	{
+		display: none;
+		
+	}
+	#songmeta
+	{
+		display: block;
+		margin-top: 2px;
+		padding-bottom: 4px;
 
-	
-	var remaining = progresspx-(100*3)+20; //factor x3
-	remaining = (remaining > 0 && remaining != Number.NaN ? remaining : 0);
-	styleStr = "20px " + remaining + "px " + remaining + "px 20px";
-	progresspx = (progresspx < 10 ? 10 : progresspx);
-	
-	progressbar.style.borderRadius=styleStr;
-	progressbar.style.width=(dataArray.message.song.playingstate != 2 ? 0 : progresspx) + "px";
-	
-	progressbar.innerHTML=secondsToTomeString(curr);
-	$("songtotal").innerHTML = secondsToTomeString(max);
-}
-function secondsToTomeString(seconds){
-	var dateObj = new Date(seconds*1000);
-	return ( dateObj.getHours()<1 ? dateObj.getHours()+":" : "" ) + ( dateObj.getMinutes()<10 ? "0" : "") + dateObj.getMinutes() + ":" + (dateObj.getSeconds()<10 ? "0" : "") + dateObj.getSeconds() 
-}
+	}
+	#songinfo
+	{
+		padding: 2px;
+		margin:2px;
 
-function refreshInfos(){
-	ajaxAction("info");
+	}
+	
+	.meta
+	{
+		border-radius: 5px;
+		background-color:#cccccc;
+		padding: 2px;
+		margin:2px;
+	}
+	.segment
+	{
+		margin-top: 4px;
+		padding: 2px;
+		margin:2px;
+	}
+	
+	</style>
+	</head>
+	<body>
+	<h1>Test</h1>
+	
+	
+	
+	
+	
+	<script type="text/javascript">
+	
+	function ajaxRequest(){
+	 var activexmodes=["Msxml2.XMLHTTP", "Microsoft.XMLHTTP"] //activeX versions to check for in IE
+	 if (window.ActiveXObject){ //Test for support for ActiveXObject in IE first (as XMLHttpRequest in IE7 is broken)
+	  for (var i=0; i<activexmodes.length; i++){
+	   try{
+	    return new ActiveXObject(activexmodes[i])
+	   }
+	   catch(e){
+	    //suppress error
+	   }
+	  }
+	 }
+	 else if (window.XMLHttpRequest) // if Mozilla, Safari etc
+	  return new XMLHttpRequest()
+	 else
+	  return false
+	}
+	
+	var mygetrequest=new ajaxRequest()
+	mygetrequest.onreadystatechange=function(){
+	 if (mygetrequest.readyState==4){
+	  if (mygetrequest.status==200 ){ //|| window.location.href.indexOf("http")==-1
+	 //var jsondata=eval("("+mygetrequest.responseText+")") //retrieve result as an JavaScript object
+	   var jsondata = JSON.parse(mygetrequest.responseText);
+	   applyInfos(jsondata);
+	
+	  }
+	  else{
+	   //alert("An error has occured making the request")
+	  }
+	 }
+	}
+	var globalDataArray;
+	//mygetrequest.open("GET", "/cmd.json?info", true)	
+	//mygetrequest.send(null)
+	function $(id){
+		return document.getElementById(id);
+	}
+	var refreshTimeout;
+	
+	function ajaxAction(action){
+		mygetrequest.open("GET", "/cmd.json?"+action, true);
+		mygetrequest.send(null);
+		//dataArray = mygetrequest.dataArray;
+			
+		//refreshTimeout=window.Timeout(ajaxRefresh, 1000);
+	}
+	function applyInfos(dataArray){
+		notplaying = dataArray.message.song.playingstate != 2;
+		var infostring =  (notplaying ? "Not Playing." : "Playing '" + dataArray.message.song.title + "' by " + dataArray.message.song.artist );
+		document.title = infostring;
+		
+		$("bpm").innerHTML=Math.round(dataArray.message.bpm) + " BPM";
+
+		if(notplaying)
+		{
+			$("songmeta").style.display="none";
+			$("songnotplaying").style.display="block";
+			return
+		}
+		
+		$("songnotplaying").style.display="none";
+		$("songmeta").style.display="block";		
+		$("songtitle").innerHTML = ( notplaying ? "" : dataArray.message.song.title );
+		$("songalbum").innerHTML = ( notplaying ? "" : dataArray.message.song.album );	
+		$("songartist").innerHTML = ( notplaying ? "" : dataArray.message.song.artist );	
+		$("songbpm").innerHTML = ( notplaying ? "0" : dataArray.message.song.bpm ) + " BPM";
+		var max = dataArray.message.song.totalsec;
+		var curr = dataArray.message.song.currentsec;
+		var progress = ((100/max)*curr);	
+		//alert("( 100 / "+ max + " ) * " + curr + " = " + progress);
+		var progressbar = $("songprogress");
+		progresspx = Math.round(progress*3); //factor x3
+		progress = Math.round(progress);
+	
+		
+		var remaining = progresspx-(100*3)+20; //factor x3
+		remaining = (remaining > 0 && remaining != Number.NaN ? remaining : 0);
+		styleStr = "20px " + remaining + "px " + remaining + "px 20px";
+		progresspx = (progresspx < 10 ? 10 : progresspx);
+		
+		progressbar.style.borderRadius=styleStr;
+		progressbar.style.width=(notplaying ? 0 : progresspx) + "px";
+		
+		progressbar.innerHTML=secondsToTomeString(curr);
+		$("songtotal").innerHTML = secondsToTomeString(max);
+	}
+
+	function secondsToTomeString(seconds){
+		var dateObj = new Date(seconds*1000);
+		return ( dateObj.getHours()<1 ? dateObj.getHours()+":" : "" ) + ( dateObj.getMinutes()<10 ? "0" : "") + dateObj.getMinutes() + ":" + (dateObj.getSeconds()<10 ? "0" : "") + dateObj.getSeconds() 
+	}
+	
+	function refreshInfos(){
+		ajaxAction("info");
+		window.setTimeout("refreshInfos()", 1000);
+	}
 	window.setTimeout("refreshInfos()", 1000);
-}
-window.setTimeout("refreshInfos()", 1000);
-
-</script>
-<div id="infobox">
-	<div id="songinfo">
-		<span id="songtitle">Unknown Title</span> - <span id="songalbum">Unknown Album</span> - <span id="songartist">Unknown Artist</span>  <span id="songbpm">0 BPM</span>		
-	</div>
-	<div id="songinfo2">
-		<div class="progressbar-outer" style="display:inline-block;">
-			<div class="progressbar-inner" id="songprogress">--:--</div>
+	
+	</script>
+	<div id="infobox">
+		<div id="songinfo" class="songinfo">
+			<div id="songmeta">
+				<div id="songtitle" class="meta full">Unknown Title</div> <div id="songalbum" class="meta left">Unknown Album</div><div id="songartist" class="meta left">Unknown Artist</div><div id="songbpm" class="meta right">0 BPM</div>		
+			</div>
+			<div id="songnotplaying">
+				<div class="meta"> Not Playing. </div>
+			</div>
 		</div>
-		<div id="songtotal" style="display:inline-block;">--:--</div><br />
+		<br class="clear">
+		<div id="progressbar" class="segment">
+			<div class="progressbar-outer" style="display:inline-block;">
+				<div class="progressbar-inner lfloat" id="songprogress">--:--</div>
+			</div>
+			<div id="songtotal" class="right" style="display:inline-block;">--:--</div>
+		</div>
+		<div id="second_row" class="segment">
+			<div id="controls" class="left">
+				<div id="upper_controls">
+					<input id="prev" type="button" value="&#9665;" onclick='ajaxAction("playlast")'/>
+					<input id="playpause" type="button" value="&#65517;&nbsp;&#9658;" onclick='ajaxAction("playpause")'/>
+					<input id="next" type="button" onclick='ajaxAction("playnext")' value="&#9655;" />
+				</div>
+				<div id="lower_controls">
+					<input type="button" onclick='ajaxAction("info")' value="&reg;"/>
+					<input type="button" onclick='ajaxAction("forcenext")' value="Force Next"/>
+				</div>
+			</div>
+			<div id="stats" class="right">
+				<div id="bpm"> --- BPM</div>
+			</div>
+		</div>
+
 	</div>
-	<div id="controls">
-		<input id="prev" type="button" value="&#9665;" onclick='ajaxAction("playlast")'/>
-		<input id="playpause" type="button" value="&#65517;&nbsp;&#9658;" onclick='ajaxAction("playpause")'/>
-		<input id="next" type="button" onclick='ajaxAction("playnext")' value="&#9655;" />
-	</div>
-	<input type="button" onclick='ajaxAction("info")' value="&reg;"/>
-	<input type="button" onclick='ajaxAction("forcenext")' value="Force Next"/>
-</div>
-<br>
-<br>
-<br>
-<br>
-<hr>
-The Pinkie Pie Is A Lie! 
-</body>
-</html>
+	<br>
+	<br>
+	<br>
+	<br>
+	<hr>
+	The Pinkie Pie Is A Lie! 
+	</body>
+	</html>
