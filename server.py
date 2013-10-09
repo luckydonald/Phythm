@@ -133,6 +133,15 @@ class BPMServer():
             print("CMD> updated self.info")
             print(self.info)
             return {"status": 0, "message": self.info}
+        
+        if cmd.lower() == "playlast":
+            print(self.played_history)
+            self.playing_index = self.playing_index - 1
+            print("CMD> Old Song: %s" % self.played_history[self.playing_index][2])
+            self.playSong(self.played_history[self.playing_index][2])
+            self.updatePlayerStatisInfo()
+            return {"status": 0, "message": self.info}
+            
             
         if cmd.lower() == self.shutdownCommand:
             self.softQuit();
@@ -153,11 +162,8 @@ class BPMServer():
                 print("Match> Already played, skipping.")
                 continue
             self.played_history.append(song)
-            self.playing_index=self.playing_index + 1 #TODO: has python ++ ?
-            return song #stop here
-            
-            #TODO: Need to re implement Already-Played-System 
-            
+            self.playing_index=len(self.played_history)-1 #Reset 
+            return song #stop here            
             
         db.close()
         return self.getBestMatch(bpm,diff+5)
@@ -196,6 +202,7 @@ class BPMServer():
                 "playingstate": songInfo['state'] #playing state
                 }   
         return parsedInfo
+    
     def updatePlayerStatisInfo(self):
         self.info["song"] = self.getPlayerStatus()
         
