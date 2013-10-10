@@ -14,7 +14,7 @@ class ModHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         if re.match(r"/cmd\.json", self.path):
             parts = self.path.split("?")
             if len(parts) == 2:
-                msg = json.dumps(self.bpmServer.handleCMD(parts[1]))
+                msg = json.dumps(self.bpmServer.handleCMD(parts[1]), sort_keys=True, indent=4, separators=(',', ': '))
             else: 
                 msg = "Error! wrong number of args!"
             self.send_response(200)
@@ -75,6 +75,9 @@ class BPMServer():
                 "file": "/music/songname.mp3",
                 "playingstate": 2 #playing state ( 0=stopped; 1=paused; 2=playing )
                 },
+        "history": {
+                   },
+        "history_index": 0  
         }
     
     def run(self):
@@ -105,20 +108,38 @@ class BPMServer():
         diff = curr - self.last_tick
         self.last_tick = curr
         self.bpm = (1.0 / diff) * 60.0
-        print("BPM> update to %s" % self.bpm)
+        #print("BPM> update to %s" % self.bpm)
 
         
         #print("Tick! " + str(diff))
         
     def handleCMD(self, cmd):
-        print("HTTP> Handling:" + cmd)
+        #print("HTTP> Handling:" + cmd)
         if cmd.lower() == "info":
             self.updatePlayerStatisInfo()
             return {"status": 0, "message": self.info}
+        
+        if cmd.lower() == "playlast":
+            print(self.played_history)
+            self.playing_index +=  -1
+            print("CMD> %i Last Old Song: %s" % (self.playing_index, self.played_history[self.playing_index][2]))
+            self.playSong(self.played_history[self.playing_index][2])
+            self.updatePlayerStatisInfo()
+            return {"status": 0, "message": self.info}
             
+        if cmd.lower() == "playnext":
+            print(self.played_history)
+            self.playing_index += +1
+            if(self.playing_index == len(self.played_history)):
+                songToPlay = self.getBestMatch(self.bpmAverage,self.diff) #should add new song AND jump to new song
+            print("CMD> %i Next Old Song: %s" % (self.playing_index, self.played_history[self.playing_index][2]))
+            self.playSong(self.played_history[self.playing_index][2])
+            self.updatePlayerStatisInfo()
+            return {"status": 0, "message": self.info} 
+          
         if cmd.lower() == "forcenext":
             songToPlay = self.getBestMatch(self.bpmAverage,self.diff)
-            print("CMD> New Song: %s" % songToPlay[2])
+            print("CMD> %i New Song: %s" % (self.playing_index, songToPlay[2]))
             self.playSong(songToPlay[2])
             self.updatePlayerStatisInfo()
             return {"status": 0, "message": self.info}
@@ -134,13 +155,7 @@ class BPMServer():
             print(self.info)
             return {"status": 0, "message": self.info}
         
-        if cmd.lower() == "playlast":
-            print(self.played_history)
-            self.playing_index = self.playing_index - 1
-            print("CMD> Old Song: %s" % self.played_history[self.playing_index][2])
-            self.playSong(self.played_history[self.playing_index][2])
-            self.updatePlayerStatisInfo()
-            return {"status": 0, "message": self.info}
+        
             
             
         if cmd.lower() == self.shutdownCommand:
@@ -175,8 +190,8 @@ class BPMServer():
     
     def getPlayerStatus(self):
         songInfo = moc.info()
-        print("getPlyrStats> moc.info() returns")
-        print(songInfo)
+        #print("getPlyrStats> moc.info() returns")
+        #print(songInfo)
         if songInfo['state']==0:
             parsedInfo = {
                 "title": "-",
@@ -205,8 +220,9 @@ class BPMServer():
     
     def updatePlayerStatisInfo(self):
         self.info["song"] = self.getPlayerStatus()
-        
-    
+        self.info["history"] = self.played_history #[id,bpm,path]
+        self.info["history_index"] = self.playing_index
+
 
     def softQuit(self):
         print("=== Shutting down ===")
