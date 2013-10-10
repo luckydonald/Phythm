@@ -145,7 +145,7 @@ class BPMServer():
             return {"status": 0, "message": self.info}
             
         if cmd.lower() == "playpause":
-            songToPlay = self.getBestMatch(self.bpmAverage,self.diff)
+            #songToPlay = self.getBestMatch(self.bpmAverage,self.diff)
             if moc.is_playing():
                 moc.pause()
             else:
@@ -172,11 +172,22 @@ class BPMServer():
                             # (1, -1, u'/music/SUBFOLDER/(I Want to Wear) Yellow & Blue - TalkAcanthi - Rocking is Magic.mp3')
 
             print("Match> Song is %s" % song[2])
-            print(song)
-            if song in self.played_history:
+            was_played = False
+            for i in self.played_history:
+                if song[0] == i["id"]:
+                    was_played = True
+            if was_played:
                 print("Match> Already played, skipping.")
                 continue
-            self.played_history.append(song)
+            audiofile = eyed3.load(song[2]) #path
+            bpm = audiofile.tag.bpm
+            self.played_history.append({"id":       song[0],
+                                        "bpm":      song[1],
+                                        "path":     song[2],
+                                        "title":    audiofile.tag.title,
+                                        "album":    audiofile.tag.album,
+                                        "artist":   audiofile.tag.artist
+                                        })
             self.playing_index=len(self.played_history)-1 #Reset 
             return song #stop here            
             
