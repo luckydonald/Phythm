@@ -90,7 +90,8 @@ class BPMServer():
         
         iotest.start(self)
         self.shutdownCommand = self.stringGenerator(6)  #shutdown via webUI
-        print("To Shut down please visit http://localhost:%s/cmd.json?%s via your Browser." % (settings.conf["port"],self.shutdownCommand))
+        for _ in range(5):
+            print("To Shut down please visit http://localhost:%s/cmd.json?%s via your Browser." % (settings.conf["port"],self.shutdownCommand))
         while (self.keep_running == True):
             
             if self.bpm != 0 and time.time()-self.last_tick>settings.conf["timeout"]:

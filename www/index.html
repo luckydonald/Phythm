@@ -10,12 +10,21 @@
 		width:400px;
 	
 	}
-	#infobox 
+	#infobox, #historypane
 	{
 		background-color: #f0f0f0;
 		border-radius: 5px;
 		padding: 5px;
 		width:400px;
+	}
+	.historyelement
+	{
+		background-color: #e0e0e0;
+		border-radius: 5px;
+		padding-top: 5px;
+		padding-bottom: 5px;
+		padding-left:2px;
+		padding-right:2px;
 	}
 	#bpm
 	{
@@ -47,6 +56,16 @@
 	{ 
 		float: right;
 	}
+	.center
+	{
+		float: center;
+	} 
+	.full
+	{
+		left: 0;
+		right: 0;
+		width: 100%;
+	}
 	#songnotplaying
 	{
 		display: none;
@@ -72,12 +91,18 @@
 		background-color:#cccccc;
 		padding: 2px;
 		margin:2px;
+		clear: right;
 	}
 	.segment
 	{
 		margin-top: 4px;
 		padding: 2px;
 		margin:2px;
+	}
+	.clear
+	{
+		display:inline-block;
+		margin-top:2px;
 	}
 	
 	</style>
@@ -140,6 +165,7 @@
 	}
 	function applyInfos(dataArray){
 		notplaying = dataArray.message.song.playingstate != 2;
+		stopped = dataArray.message.song.playingstate == 0;
 		var infostring =  (notplaying ? "Not Playing." : "Playing '" + dataArray.message.song.title + "' by " + dataArray.message.song.artist );
 		document.title = infostring;
 		
@@ -149,15 +175,22 @@
 		{
 			$("songmeta").style.display="none";
 			$("songnotplaying").style.display="block";
-			return
+			if(stopped)
+			{
+				$("songprogress").innerHTML = "--:--";
+				$("songprogress").style.width = "0px";
+				$("songtotal").innerHTML = "--:--";
+			}
 		}
-		
-		$("songnotplaying").style.display="none";
-		$("songmeta").style.display="block";		
-		$("songtitle").innerHTML = ( notplaying ? "" : dataArray.message.song.title );
-		$("songalbum").innerHTML = ( notplaying ? "" : dataArray.message.song.album );	
-		$("songartist").innerHTML = ( notplaying ? "" : dataArray.message.song.artist );	
-		$("songbpm").innerHTML = ( notplaying ? "0" : dataArray.message.song.bpm ) + " BPM";
+		else
+		{
+			$("songnotplaying").style.display="none";
+			$("songmeta").style.display="block";	
+		}
+		$("songtitle").innerHTML = ( stopped ? "" : dataArray.message.song.title );
+		$("songalbum").innerHTML = ( stopped ? "" : dataArray.message.song.album );	
+		$("songartist").innerHTML = ( stopped ? "" : dataArray.message.song.artist );	
+		$("songbpm").innerHTML = ( stopped ? "0" : dataArray.message.song.bpm ) + " BPM";
 		var max = dataArray.message.song.totalsec;
 		var curr = dataArray.message.song.currentsec;
 		var progress = ((100/max)*curr);	
@@ -173,10 +206,64 @@
 		progresspx = (progresspx < 10 ? 10 : progresspx);
 		
 		progressbar.style.borderRadius=styleStr;
-		progressbar.style.width=(notplaying ? 0 : progresspx) + "px";
+		progressbar.style.width=(stopped ? 0 : progresspx) + "px";
 		
-		progressbar.innerHTML=secondsToTomeString(curr);
-		$("songtotal").innerHTML = secondsToTomeString(max);
+		progressbar.innerHTML=( stopped ? "--:--" : secondsToTomeString(curr));
+		$("songtotal").innerHTML =( stopped ? "--:--" :  secondsToTomeString(max) );
+		
+		
+		//GET HISTORY
+			//  "album": "Nightcore",
+			//  "artist": "Nightcore ",
+			//  "bpm": 83,
+			//  "currentsec": "2",
+			//  "file": "/music/iTunes/Nightcore/Nightcore/01 Nightcore - Bad.mp3",
+			//  "playingstate": 1,
+			//  "title": "Nightcore - Bad",
+			//  "totalsec": "173
+		$("historypane").innerHTML = "";
+		dataArray.message.history
+		
+		for (var i = 0; i < dataArray.message.history.length; i++) {
+			var element = dataArray.message.history[i];
+			// Do something with element i.
+			var historyelement = document.createElement('div');
+			historyelement.setAttribute('class', 'historyelement clear full');
+			//historyelement.setAttribute('class', 'groupdiv');
+			
+			
+	  
+					
+          		var historyid = document.createElement('div');
+			historyid.setAttribute('class', 'historyid meta left');
+			historyid.innerHTML = i;
+			historyelement.appendChild(historyid); 
+			
+          		var historytitle = document.createElement('div');
+			historytitle.setAttribute('class', 'historytitle meta left center');
+			historytitle.innerHTML = element.title;
+			historyelement.appendChild(historytitle); 
+			
+			var historyalbum = document.createElement('div');
+			historyalbum.setAttribute('class', 'historyalbum meta left');
+			historyalbum.innerHTML = element.album;
+			historyelement.appendChild(historyalbum); 
+			
+			var historyartist = document.createElement('div');
+			historyartist.setAttribute('class', 'historyartist meta left');
+			historyartist.innerHTML = element.artist;
+			historyelement.appendChild(historyartist);
+			
+			var historybpm = document.createElement('div');
+			historybpm.setAttribute('class', 'historybpm meta right');
+			historybpm.innerHTML = element.bpm;
+			historyelement.appendChild(historybpm);
+
+			$("historypane").appendChild(historyelement); 
+			
+			
+		}
+		
 	}
 
 	function secondsToTomeString(seconds){
@@ -191,8 +278,8 @@
 	window.setTimeout("refreshInfos()", 1000);
 	
 	</script>
-	<div id="infobox">
-		<div id="songinfo" class="songinfo">
+	<div id="infobox" class="clear">
+		<div id="songinfo" class="songinfo full clear">
 			<div id="songmeta">
 				<div id="songtitle" class="meta full">Unknown Title</div> <div id="songalbum" class="meta left">Unknown Album</div><div id="songartist" class="meta left">Unknown Artist</div><div id="songbpm" class="meta right">0 BPM</div>		
 			</div>
@@ -203,7 +290,7 @@
 		<br class="clear">
 		<div id="progressbar" class="segment">
 			<div class="progressbar-outer" style="display:inline-block;">
-				<div class="progressbar-inner lfloat" id="songprogress">--:--</div>
+				<div class="progressbar-inner left" id="songprogress">--:--</div>
 			</div>
 			<div id="songtotal" class="right" style="display:inline-block;">--:--</div>
 		</div>
@@ -215,7 +302,7 @@
 					<input id="next" type="button" onclick='ajaxAction("playnext")' value="&#9655;" />
 				</div>
 				<div id="lower_controls">
-					<input type="button" onclick='ajaxAction("info")' value="&reg;"/>
+					<input type="button" onclick='refreshInfos()' value="&reg;"/>
 					<input type="button" onclick='ajaxAction("forcenext")' value="Force Next"/>
 				</div>
 			</div>
@@ -223,7 +310,10 @@
 				<div id="bpm"> --- BPM</div>
 			</div>
 		</div>
+	</div>
 
+	<div id="historypane">
+		
 	</div>
 	<br>
 	<br>
