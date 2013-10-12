@@ -4,10 +4,12 @@
 	<head>
 	<meta http-equiv="content-type" content="text/html; utf-8">
 	<title> May Contain Ponys.</title>
+	<meta name="viewport" content="width = 420"> 
 	<style>
+	
 	body
 	{
-		width:640px;
+		width:420px;
 	
 	}
 	#infobox, #historypane
@@ -15,7 +17,7 @@
 		background-color: #f0f0f0;
 		border-radius: 5px;
 		padding: 5px;
-		width:640px;
+		width:400px;
 	}
 	.historyelement
 	{
@@ -80,7 +82,8 @@
 	}
 	#songinfo
 	{
-		width:392px;
+		width:372px;
+		padding-left: 5px;
 
 	}
 	
@@ -121,30 +124,43 @@
 	}
 	
 	#cover{
-		width:100px;
 		height:100px;
 		display:block;
 		padding:5px;
 		background-color:#cccccc;
 		vertical-align: middle;
+		border-radius: 5px;
 
 	}
 	#coverimage{
-		width:100%;
-		height:100%
+		margin-left:auto;
+		margin-right:auto;
+		text-align:right;
+		height:100px;
+		border-radius: 5px;
 		display:block;
+		padding: 0 auto !important;
 	}
-	
+	#imageoverlay{
+		text-align: center;
+		display: none;
+		width:100%;
+		height:100%;
+		background-color:rgba(0,0,0,0.5);
+		position: absolute;
+		top:0;
+		left:0;
+	}
+		
 	</style>
 	</head>
 	<body>
-	<h1>Test</h1>
-	
-	
-	
-	
-	
 	<script type="text/javascript">
+	var update = {
+		song:"",
+		cover: false,
+		history: false
+	}
 	
 	function ajaxRequest(){
 	 var activexmodes=["Msxml2.XMLHTTP", "Microsoft.XMLHTTP"] //activeX versions to check for in IE
@@ -217,9 +233,9 @@
 			$("songnotplaying").style.display="none";
 			$("songmeta").style.display="block";	
 		}
-		$("songtitle").innerHTML = ( stopped ? "" : dataArray.message.song.title );
-		$("songalbum").innerHTML = ( stopped ? "" : dataArray.message.song.album );	
-		$("songartist").innerHTML = ( stopped ? "" : dataArray.message.song.artist );	
+		$("songtitle").innerHTML = ( stopped ? "" : (dataArray.message.song.title == "" ? "&nbsp;&nbsp;-&nbsp;&nbsp;" : dataArray.message.song.title));
+		$("songalbum").innerHTML = ( stopped ? "" : (dataArray.message.song.album == "" ? "&nbsp;&nbsp;-&nbsp;&nbsp;" : dataArray.message.song.album));	
+		$("songartist").innerHTML = ( stopped ? "" : (dataArray.message.song.artist == "" ? "&nbsp;&nbsp;-&nbsp;&nbsp;" : dataArray.message.song.artist));	
 		$("songbpm").innerHTML = ( stopped ? "0" : dataArray.message.song.bpm ) + " BPM";
 		var max = dataArray.message.song.totalsec;
 		var curr = dataArray.message.song.currentsec;
@@ -241,7 +257,7 @@
 		progressbar.innerHTML=( stopped ? "--:--" : secondsToTomeString(curr));
 		$("songtotal").innerHTML =( stopped ? "--:--" :  secondsToTomeString(max) );
 		
-		if (dataArray.message.history != "")
+		if (dataArray.message.update.history)
 		{
 			//GET HISTORY
 				//  "album": "Nightcore",
@@ -294,19 +310,51 @@
 				historybpm.innerHTML = element.bpm;
 				tr.appendChild(historybpm);			
 			}
-			$("historypane").appendChild(historytable); 
+			$("historypane").appendChild(historytable);
+			update.history=true;
 		}
 		//COVER ART
-		if (dataArray.message.song.cover.indexOf("data:image/jpeg;charset=utf-8;base64,")==0)
-		{
-			$("coverimage").src=dataArray.message.song.cover;
-			var image = new PNG(dataArray.message.song.cover);
+		if (dataArray.message.update.cover){
+			//alert(dataArray.message.song.cover);
+			if (dataArray.message.song.cover.indexOf("data:image/jpeg;charset=utf-8;base64,")==0)
+			{
+				src = dataArray.message.song.cover
+			}
+			else
+			{
+				src = "no-cover.jpg"
+			}
+			$("coverimage").src=src;
+			$("overlayimage").src=src;
+			var image = {width:0,height:0}
+			//alert(window.getComputedStyle($("coverimage")).width);
+			image.width = window.getComputedStyle($("coverimage")).width
+			image.height = window.getComputedStyle($("coverimage")).height
+			var ratio = image.width / image.height;
+			if(image.width > image.height) //   Image like this: ||
+			{
+				
+			}else	//   Image like this: ==
+			{
+			}
+			$("overlayimage").style.height = (wndsize().width) + "px";
+			$("overlayimage").style.width = (wndsize().height) + "px";
+			//var image = new PNG(dataArray.message.song.cover);
+			//$("cover").style.background="url(" + dataArray.message.song.cover + ") center center no-repeat";
 			
 			//$("coverimage").reload();
-			
+			update.cover=true;	
 		}
-		alert(dataArray.message.song.cover);
-		
+		if (update.song != dataArray.message.song.file)
+		{
+			ajaxAction("fullupdate");
+		}
+		if (update.cover == true && update.history == true)
+		{
+			update.song = dataArray.message.song.file;
+			update.cover == false;
+			update.history == false;
+		}
 	}
 
 	function secondsToTomeString(seconds){
@@ -316,30 +364,68 @@
 	
 	function refreshInfos(){
 		ajaxAction("info");
-		//timeout = window.setTimeout("refreshInfos()", 1000);
+		timeout = window.setTimeout("refreshInfos()", 1000);
 	}
 	var timeout = window.setTimeout("refreshInfos()", 1000);
 	
-	</script>
+	function zoomImage() {
+		$("imageoverlay").style.display = "inline";
+		
+		
+	}
+	function dezoomImage() {
+		$("imageoverlay").style.display = "none";
+		
+		
+	}
+	
+	
+	
+	
+
+	function wndsize(){
+		var w = 0;var h = 0;
+		//IE
+		if(!window.innerWidth){
+		    if(!(document.documentElement.clientWidth == 0)){
+			//strict mode
+			w = document.documentElement.clientWidth;h = document.documentElement.clientHeight;
+		    } else{
+			//quirks mode
+			w = document.body.clientWidth;h = document.body.clientHeight;
+		    }
+		} else {
+		    //w3c
+		    w = window.innerWidth;h = window.innerHeight;
+		}
+		return {width:w,height:h};
+	}
+</script>
+	<div id="imageoverlay" onclick="dezoomImage()"><img id="overlayimage" onclick="dezoomImage()" scr="" /></div>
 	<div id="infobox" class="clear">
-		<div id="cover" class="left">
-			<img id="coverimage" scr="">
-		</div>
-		<div id="songinfo" class="songinfo clear">
-			<div id="songmeta">
-				<div id="songtitle" class="meta full">Unknown Title</div> <div id="songalbum" class="meta left">Unknown Album</div><div id="songartist" class="meta left">Unknown Artist</div><div id="songbpm" class="meta right">0 BPM</div>		
+		<div id="first_row">
+			<div id="cover" class="clear">
+				<img id="coverimage" onclick="zoomImage()" scr="" />
 			</div>
-			<div id="songnotplaying">
-				<div class="meta"> Not Playing. </div>
+			<div id="rightinfo">
+				<div id="songinfo" class="songinfo">
+					<div id="songmeta">
+						<div id="songtitle" class="meta full">Unknown Title</div> <div id="songalbum" class="meta left">Unknown Album</div><div id="songartist" class="meta left">Unknown Artist</div><div id="songbpm" class="meta right">0 BPM</div>		
+					</div>
+					<div id="songnotplaying">
+						<div class="meta"> Not Playing. </div>
+					</div>
+				</div>
+				<br class="clear">
+				<div id="progressbar" class="segment">
+					<div class="progressbar-outer" style="display:inline-block;">
+						<div class="progressbar-inner left" id="songprogress">--:--</div>
+					</div>
+					<div id="songtotal" class="right" style="display:inline-block;">--:--</div>
+				</div>
 			</div>
 		</div>
 		<br class="clear">
-		<div id="progressbar" class="segment">
-			<div class="progressbar-outer" style="display:inline-block;">
-				<div class="progressbar-inner left" id="songprogress">--:--</div>
-			</div>
-			<div id="songtotal" class="right" style="display:inline-block;">--:--</div>
-		</div>
 		<div id="second_row" class="segment">
 			<div id="controls" class="left">
 				<div id="upper_controls">

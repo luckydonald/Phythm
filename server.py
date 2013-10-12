@@ -67,6 +67,7 @@ class BPMServer():
     info = {
         "bpm": 0,
         "song": {
+                "id": -2,
                 "title": "Songname",
                 "album": "Songalbum", 
                 "artist": "Songartist", 
@@ -74,12 +75,16 @@ class BPMServer():
                 "totalsec": 125,
                 "bpm":-1,
                 "file": "/music/songname.mp3",
-                "playingstate": 2, #playing state ( 0=stopped; 1=paused; 2=playing )+
+                "playingstate": 2, #playing state ( 0=stopped; 1=paused; 2=playing )
                 "cover":""
                 },
         "history": {
                    },
-        "history_index": 0  
+        "history_index": 0,
+        "update": {
+                   "history": False,
+                   "cover": False
+                   }  
         }
     
     def run(self):
@@ -119,7 +124,7 @@ class BPMServer():
     def handleCMD(self, cmd):
         #print("HTTP> Handling:" + cmd)
         if cmd.lower() == "info":
-            self.updatePlayerStatisInfo()
+            self.updatePlayerStatisInfo(False,False)
             return {"status": 0, "message": self.info}
         
         if cmd.lower() == "playlast":
@@ -127,7 +132,7 @@ class BPMServer():
             self.playing_index +=  -1
             print("CMD> %i Last Old Song: %s" % (self.playing_index, self.played_history[self.playing_index]["path"]))
             self.playSong(self.played_history[self.playing_index]["path"])
-            self.updatePlayerStatisInfo()
+            self.updatePlayerStatisInfo(True, True)
             return {"status": 0, "message": self.info}
             
         if cmd.lower() == "playnext":
@@ -137,14 +142,14 @@ class BPMServer():
                 songToPlay = self.getBestMatch(self.bpmAverage,self.diff) #should add new song AND jump to new song
             print("CMD> %i Next Old Song: %s" % (self.playing_index, self.played_history[self.playing_index]["path"]))
             self.playSong(self.played_history[self.playing_index]["path"])
-            self.updatePlayerStatisInfo()
+            self.updatePlayerStatisInfo(True,True)
             return {"status": 0, "message": self.info} 
           
         if cmd.lower() == "forcenext":
             songToPlay = self.getBestMatch(self.bpmAverage,self.diff)
             print("CMD> %i New Song: %s" % (self.playing_index, songToPlay[2]))
             self.playSong(songToPlay[2])
-            self.updatePlayerStatisInfo()
+            self.updatePlayerStatisInfo(True,True)
             return {"status": 0, "message": self.info}
             
         if cmd.lower() == "playpause":
@@ -152,13 +157,14 @@ class BPMServer():
             if moc.is_playing():
                 moc.pause()
             else:
-                moc.unpause()
-            self.updatePlayerStatisInfo()
+                moc.unpause() #TODO: Start again if stopped, to do that, load file again.
+            self.updatePlayerStatisInfo(False,False)
             print("CMD> updated self.info")
             print(self.info)
             return {"status": 0, "message": self.info}
-        
-        
+        if cmd.lower() == "fullupdate":
+            self.updatePlayerStatisInfo(True, True)
+            return {"status": 0, "message": self.info}
             
             
         if cmd.lower() == self.shutdownCommand:
@@ -202,12 +208,13 @@ class BPMServer():
         
         return songInfo
     
-    def getPlayerStatus(self):
+    def getPlayerStatus(self,includeArtwork=False):
         songInfo = moc.info()
         #print("getPlyrStats> moc.info() returns")
         #print(songInfo)
         if songInfo['state']==0:
             parsedInfo = {
+                "id": -1,
                 "title": "-",
                 "album": "-", 
                 "artist": "-", 
@@ -220,13 +227,15 @@ class BPMServer():
         else:
             audiofile = eyed3.load(songInfo['file'])
             bpm = audiofile.tag.bpm
+            
             artwork_string = ""
-            try:
-                file = File(songInfo['file'])
-                artwork = file.tags['APIC:'].data
-                artwork_string = "data:image/jpeg;charset=utf-8;base64," + base64.b64encode(artwork)
-            except KeyError:
-                artwork_string = ""
+            if(includeArtwork):
+                try:
+                    file = File(songInfo['file'])
+                    artwork = file.tags['APIC:'].data
+                    artwork_string = "data:image/jpeg;charset=utf-8;base64," + base64.b64encode(artwork)
+                except KeyError:
+                    artwork_string = ""
             parsedInfo = {
                 "title": songInfo['songtitle'],
                 "album": songInfo['album'], 
@@ -240,10 +249,16 @@ class BPMServer():
                 }   
         return parsedInfo
     
-    def updatePlayerStatisInfo(self):
-        self.info["song"] = self.getPlayerStatus()
-        self.info["history"] = self.played_history #[id,bpm,path]
+    def updatePlayerStatisInfo(self,includeArtwork=False,includeHistory=False):
+        self.info["song"] = self.getPlayerStatus(includeArtwork)
+        if includeHistory:
+            self.info["history"] = self.played_history #[id,bpm,path]
         self.info["history_index"] = self.playing_index
+        self.info["update"] = {
+           "history": includeHistory,
+           "cover": includeArtwork
+        } 
+        
 
 
     def softQuit(self):
