@@ -3,8 +3,9 @@ import os, json
 conf = {}
 
 default = {
+        "port":                          8080,
         "music_path":                   ".",
-        "music_extensions":             ["mp3", "flac"],
+        "audio_types":             ['audio/mpeg'],
         "max_diff":                     20,
         "tick_gpio":                    0,
         "average":						20,  						#TODO: Needs better name

@@ -24,11 +24,12 @@ def processFile(currentDir):
     # Get the absolute path of the currentDir parameter
     currentDir = os.path.abspath(currentDir)
     # Get a list of files in currentDir
-    filesInCurDir = os.listdir(currentDir)
+    filesInCurDir = os.listdir(unicode(currentDir))
     
     # Traverse through all files
     for file in filesInCurDir:
         curFile = os.path.join(currentDir, file)
+        #curFile = curFile.encode('utf-16')
         
         # Check if it's a normal file or directory
         if os.path.isfile(curFile):
@@ -37,7 +38,7 @@ def processFile(currentDir):
             # Get the file extension
             
             # Check if the file has an extension of typical music files
-            if curFileExtension in ['audio/mpeg']:
+            if curFileExtension in settings.conf["audio_types"]:
                 # We have got a audio file! Increment the counter
                 processFile.counter += 1
                 
@@ -46,8 +47,8 @@ def processFile(currentDir):
                 bpm = audiofile.tag.bpm
                 if bpm == None:
                     bpm = 0
-                print('=> Found fitting \'%s:\' file with %3d BPM: %s '% (curFileExtension,bpm,unicode(curFile)))
-                c.execute("INSERT INTO music VALUES (NULL,?,?)" , (bpm, unicode(curFile)))
+                print('=> Found fitting \'%s:\' file with %3d BPM: %s '% (curFileExtension,bpm,curFile))
+                c.execute("INSERT INTO music VALUES (NULL,?,?)" , (bpm, curFile))
         else:
             # We got a directory, enter into it for further processing
             #print('# Found dir: %s' % curFile)
@@ -68,9 +69,8 @@ processFile.counter = -1
 
 if __name__ == '__main__':
     # Get the current working directory
-    currentDir = os.getcwd()
-    currentDir = songdir = settings.conf["music_path"]
- #"/music"
+    #currentDir = os.getcwd()
+    currentDir = settings.conf["music_path"]   #for example "/music"
     print('=== Creating Database === ')
 
     print('Starting processing in %s' % currentDir)
@@ -103,4 +103,4 @@ if __name__ == '__main__':
     sqlconn.commit()
     sqlconn.close()
 
-
+    print("=== Done === ")
