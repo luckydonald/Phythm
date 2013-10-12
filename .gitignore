@@ -8,3 +8,6 @@
 /music.sqlite
 /iotest.pyc
 /config.json
+/*.db
+/*.sqlite
+/songs.db
