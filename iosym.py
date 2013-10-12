@@ -10,5 +10,5 @@ while True:
     
     s.sendall("t")
     
-    time.sleep((1.0 / (120 + random.randint(-10, 10))) * 60.0)
+    time.sleep((1.0 / (140 + random.randint(-10, 10))) * 60.0)
     #print("tick")
