@@ -123,8 +123,8 @@ class BPMServer():
         if cmd.lower() == "playlast":
             print(self.played_history)
             self.playing_index +=  -1
-            print("CMD> %i Last Old Song: %s" % (self.playing_index, self.played_history[self.playing_index][2]))
-            self.playSong(self.played_history[self.playing_index][2])
+            print("CMD> %i Last Old Song: %s" % (self.playing_index, self.played_history[self.playing_index]["path"]))
+            self.playSong(self.played_history[self.playing_index]["path"])
             self.updatePlayerStatisInfo()
             return {"status": 0, "message": self.info}
             
@@ -133,8 +133,8 @@ class BPMServer():
             self.playing_index += +1
             if(self.playing_index == len(self.played_history)):
                 songToPlay = self.getBestMatch(self.bpmAverage,self.diff) #should add new song AND jump to new song
-            print("CMD> %i Next Old Song: %s" % (self.playing_index, self.played_history[self.playing_index][2]))
-            self.playSong(self.played_history[self.playing_index][2])
+            print("CMD> %i Next Old Song: %s" % (self.playing_index, self.played_history[self.playing_index]["path"]))
+            self.playSong(self.played_history[self.playing_index]["path"])
             self.updatePlayerStatisInfo()
             return {"status": 0, "message": self.info} 
           
@@ -171,7 +171,7 @@ class BPMServer():
         for song in c: 
                             # (index, bpm, file)  #index starts at 1!
                             # (1, -1, u'/music/SUBFOLDER/(I Want to Wear) Yellow & Blue - TalkAcanthi - Rocking is Magic.mp3')
-
+            song
             print("Match> Song is %s" % song[2])
             was_played = False
             for i in self.played_history:

@@ -2,7 +2,8 @@
 	 "http://www.w3.org/TR/xhtml1/DTD/Strict.dtd">
 	<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 	<head>
-	<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+	<meta http-equiv="content-type" content="text/html; chaappend
+	859-1">
 	<title> May Contain Ponys.</title>
 	<style>
 	body
@@ -80,8 +81,7 @@
 	}
 	#songinfo
 	{
-		padding: 2px;
-		margin:2px;
+		width:392px;
 
 	}
 	
@@ -90,8 +90,21 @@
 		border-radius: 5px;
 		background-color:#cccccc;
 		padding: 2px;
-		margin:2px;
+		margin-top:4px;
+		margin-left:2px;
 		clear: right;
+	}
+	.metafirst
+	{
+		border-radius: 5px 0 0 5px;
+	}
+	.metamiddle
+	{
+		border-radius: 0 0 0 0;
+	}
+	.metalast
+	{
+		border-radius: 0 5px 5px 0;
 	}
 	.segment
 	{
@@ -103,6 +116,9 @@
 	{
 		display:inline-block;
 		margin-top:2px;
+	}
+	.current td{
+		background-color:orange;
 	}
 	
 	</style>
@@ -211,58 +227,62 @@
 		progressbar.innerHTML=( stopped ? "--:--" : secondsToTomeString(curr));
 		$("songtotal").innerHTML =( stopped ? "--:--" :  secondsToTomeString(max) );
 		
-		
-		//GET HISTORY
-			//  "album": "Nightcore",
-			//  "artist": "Nightcore ",
-			//  "bpm": 83,
-			//  "currentsec": "2",
-			//  "file": "/music/iTunes/Nightcore/Nightcore/01 Nightcore - Bad.mp3",
-			//  "playingstate": 1,
-			//  "title": "Nightcore - Bad",
-			//  "totalsec": "173
-		$("historypane").innerHTML = "";
-		dataArray.message.history
-		
-		for (var i = 0; i < dataArray.message.history.length; i++) {
-			var element = dataArray.message.history[i];
-			// Do something with element i.
-			var historyelement = document.createElement('div');
-			historyelement.setAttribute('class', 'historyelement clear full');
+		if (dataArray.message.history != "")
+		{
+			//GET HISTORY
+				//  "album": "Nightcore",
+				//  "artist": "Nightcore ",
+				//  "bpm": 83,
+				//  "currentsec": "2",
+				//  "file": "/music/iTunes/Nightcore/Nightcore/01 Nightcore - Bad.mp3",
+				//  "playingstate": 1,
+				//  "title": "Nightcore - Bad",
+				//  "totalsec": "173
+			$("historypane").innerHTML = "";
+			
+	
+			var historytable = document.createElement('table');
+			historytable.setAttribute('class', 'historytable clear full');
 			//historyelement.setAttribute('class', 'groupdiv');
 			
-			
-	  
-					
-          		var historyid = document.createElement('div');
-			historyid.setAttribute('class', 'historyid meta left');
-			historyid.innerHTML = i;
-			historyelement.appendChild(historyid); 
-			
-          		var historytitle = document.createElement('div');
-			historytitle.setAttribute('class', 'historytitle meta left center');
-			historytitle.innerHTML = element.title;
-			historyelement.appendChild(historytitle); 
-			
-			var historyalbum = document.createElement('div');
-			historyalbum.setAttribute('class', 'historyalbum meta left');
-			historyalbum.innerHTML = element.album;
-			historyelement.appendChild(historyalbum); 
-			
-			var historyartist = document.createElement('div');
-			historyartist.setAttribute('class', 'historyartist meta left');
-			historyartist.innerHTML = element.artist;
-			historyelement.appendChild(historyartist);
-			
-			var historybpm = document.createElement('div');
-			historybpm.setAttribute('class', 'historybpm meta right');
-			historybpm.innerHTML = element.bpm;
-			historyelement.appendChild(historybpm);
-
-			$("historypane").appendChild(historyelement); 
-			
-			
+			for (var i = 0; i < dataArray.message.history.length; i++) {
+				var element = dataArray.message.history[i];
+				// Do something with element i.
+				var tr = document.createElement('tr');
+				tr.setAttribute('class', (dataArray.message.history_index == i?"current":""));
+	
+				historytable.insertBefore(tr,historytable.childNodes[0]); //Insert as first Element
+	
+				//historytable.appendChild(tr); 
+				
+				var historyid = document.createElement('td');
+				historyid.setAttribute('class', 'historyid meta metafirst ');//left center
+				historyid.innerHTML = i;
+				tr.appendChild(historyid);
+				
+				var historytitle = document.createElement('td');
+				historytitle.setAttribute('class', 'historytitle meta metamiddle ');//left center
+				historytitle.innerHTML = element.title;
+				tr.appendChild(historytitle); 
+				
+				var historyalbum = document.createElement('td');
+				historyalbum.setAttribute('class', 'historyalbum meta metamiddle ');//left
+				historyalbum.innerHTML = element.album;
+				tr.appendChild(historyalbum); 
+				
+				var historyartist = document.createElement('td');
+				historyartist.setAttribute('class', 'historyartist meta metamiddle ');//left
+				historyartist.innerHTML = element.artist;
+				tr.appendChild(historyartist);
+				
+				var historybpm = document.createElement('td');
+				historybpm.setAttribute('class', 'historybpm meta metalast ');//right
+				historybpm.innerHTML = element.bpm;
+				tr.appendChild(historybpm);			
+			}
+			$("historypane").appendChild(historytable); 
 		}
+
 		
 	}
 
@@ -273,9 +293,9 @@
 	
 	function refreshInfos(){
 		ajaxAction("info");
-		window.setTimeout("refreshInfos()", 1000);
+		timeout = window.setTimeout("refreshInfos()", 1000);
 	}
-	window.setTimeout("refreshInfos()", 1000);
+	var timeout = window.setTimeout("refreshInfos()", 1000);
 	
 	</script>
 	<div id="infobox" class="clear">
@@ -313,6 +333,7 @@
 	</div>
 
 	<div id="historypane">
+		
 		
 	</div>
 	<br>
