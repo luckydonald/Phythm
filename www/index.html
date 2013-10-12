@@ -2,13 +2,12 @@
 	 "http://www.w3.org/TR/xhtml1/DTD/Strict.dtd">
 	<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 	<head>
-	<meta http-equiv="content-type" content="text/html; chaappend
-	859-1">
+	<meta http-equiv="content-type" content="text/html; utf-8">
 	<title> May Contain Ponys.</title>
 	<style>
 	body
 	{
-		width:400px;
+		width:640px;
 	
 	}
 	#infobox, #historypane
@@ -16,7 +15,7 @@
 		background-color: #f0f0f0;
 		border-radius: 5px;
 		padding: 5px;
-		width:400px;
+		width:640px;
 	}
 	.historyelement
 	{
@@ -119,6 +118,21 @@
 	}
 	.current td{
 		background-color:orange;
+	}
+	
+	#cover{
+		width:100px;
+		height:100px;
+		display:block;
+		padding:5px;
+		background-color:#cccccc;
+		vertical-align: middle;
+
+	}
+	#coverimage{
+		width:100%;
+		height:100%
+		display:block;
 	}
 	
 	</style>
@@ -282,7 +296,16 @@
 			}
 			$("historypane").appendChild(historytable); 
 		}
-
+		//COVER ART
+		if (dataArray.message.song.cover.indexOf("data:image/jpeg;charset=utf-8;base64,")==0)
+		{
+			$("coverimage").src=dataArray.message.song.cover;
+			var image = new PNG(dataArray.message.song.cover);
+			
+			//$("coverimage").reload();
+			
+		}
+		alert(dataArray.message.song.cover);
 		
 	}
 
@@ -293,13 +316,16 @@
 	
 	function refreshInfos(){
 		ajaxAction("info");
-		timeout = window.setTimeout("refreshInfos()", 1000);
+		//timeout = window.setTimeout("refreshInfos()", 1000);
 	}
 	var timeout = window.setTimeout("refreshInfos()", 1000);
 	
 	</script>
 	<div id="infobox" class="clear">
-		<div id="songinfo" class="songinfo full clear">
+		<div id="cover" class="left">
+			<img id="coverimage" scr="">
+		</div>
+		<div id="songinfo" class="songinfo clear">
 			<div id="songmeta">
 				<div id="songtitle" class="meta full">Unknown Title</div> <div id="songalbum" class="meta left">Unknown Album</div><div id="songartist" class="meta left">Unknown Artist</div><div id="songbpm" class="meta right">0 BPM</div>		
 			</div>

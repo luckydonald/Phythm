@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 import json, random, re, sqlite3, settings, string, socket, SimpleHTTPServer, SocketServer, threading, time
-import signal
 import eyed3, iotest, moc
+from mutagen import File #cover artwork
+import base64 #cover artwork
  # as seen in https://github.com/jonashaag/python-moc   -  DOC at http://moc.lophus.org/
 
 
@@ -73,7 +74,8 @@ class BPMServer():
                 "totalsec": 125,
                 "bpm":-1,
                 "file": "/music/songname.mp3",
-                "playingstate": 2 #playing state ( 0=stopped; 1=paused; 2=playing )
+                "playingstate": 2, #playing state ( 0=stopped; 1=paused; 2=playing )+
+                "cover":""
                 },
         "history": {
                    },
@@ -218,6 +220,13 @@ class BPMServer():
         else:
             audiofile = eyed3.load(songInfo['file'])
             bpm = audiofile.tag.bpm
+            artwork_string = ""
+            try:
+                file = File(songInfo['file'])
+                artwork = file.tags['APIC:'].data
+                artwork_string = "data:image/jpeg;charset=utf-8;base64," + base64.b64encode(artwork)
+            except KeyError:
+                artwork_string = ""
             parsedInfo = {
                 "title": songInfo['songtitle'],
                 "album": songInfo['album'], 
@@ -226,7 +235,8 @@ class BPMServer():
                 "totalsec": songInfo['totalsec'],
                 "bpm":bpm,
                 "file": songInfo['file'],
-                "playingstate": songInfo['state'] #playing state
+                "playingstate": songInfo['state'], #playing state
+                "cover": artwork_string
                 }   
         return parsedInfo
     
