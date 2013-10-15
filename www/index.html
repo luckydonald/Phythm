@@ -36,7 +36,7 @@
 	{
 		width:300px;
 		padding:2px;
-		background-color:grey;
+		background-color:#666;
 		
 		//border:1px solid black;
 		border-radius: 20px;
@@ -143,7 +143,8 @@
 	}
 	#imageoverlay{
 		text-align: center;
-		display: none;
+		display: inline;
+		visibility:hidden;
 		width:100%;
 		height:100%;
 		background-color:rgba(0,0,0,0.5);
@@ -151,6 +152,30 @@
 		top:0;
 		left:0;
 	}
+	
+	.arrow-up {
+		width: 0; 
+		height: 0; 
+		border-left: 2em solid transparent;
+		border-right: 2em solid transparent;
+		border-bottom: 2em solid #666;
+	}
+	
+	.arrow-down {
+		width: 0; 
+		height: 0; 
+		border-left: 2em solid transparent;
+		border-right: 2em solid transparent;
+		border-top: 2em solid #666; /* blue */
+	}
+	
+	#bpm {
+		text-align: center;
+	}
+	.historyid{
+		text-align: right;	
+	}
+	
 		
 	</style>
 	</head>
@@ -215,7 +240,7 @@
 		var infostring =  (notplaying ? "Not Playing." : "Playing '" + dataArray.message.song.title + "' by " + dataArray.message.song.artist );
 		document.title = infostring;
 		
-		$("bpm").innerHTML=Math.round(dataArray.message.bpm) + " BPM";
+		$("bpm").innerHTML=Math.round(dataArray.message.bpm);
 
 		if(notplaying)
 		{
@@ -236,7 +261,8 @@
 		$("songtitle").innerHTML = ( stopped ? "" : (dataArray.message.song.title == "" ? "&nbsp;&nbsp;-&nbsp;&nbsp;" : dataArray.message.song.title));
 		$("songalbum").innerHTML = ( stopped ? "" : (dataArray.message.song.album == "" ? "&nbsp;&nbsp;-&nbsp;&nbsp;" : dataArray.message.song.album));	
 		$("songartist").innerHTML = ( stopped ? "" : (dataArray.message.song.artist == "" ? "&nbsp;&nbsp;-&nbsp;&nbsp;" : dataArray.message.song.artist));	
-		$("songbpm").innerHTML = ( stopped ? "0" : dataArray.message.song.bpm ) + " BPM";
+		$("songbpm").innerHTML = ( stopped ? "0" : dataArray.message.song.bpm );
+		calcBpmDiff(Math.round(dataArray.message.bpm),(stopped ? 0 : dataArray.message.song.bpm));
 		var max = dataArray.message.song.totalsec;
 		var curr = dataArray.message.song.currentsec;
 		var progress = ((100/max)*curr);	
@@ -326,23 +352,50 @@
 			}
 			$("coverimage").src=src;
 			$("overlayimage").src=src;
-			var image = {width:0,height:0}
-			//alert(window.getComputedStyle($("coverimage")).width);
-			image.width = window.getComputedStyle($("coverimage")).width
-			image.height = window.getComputedStyle($("coverimage")).height
-			var ratio = image.width / image.height;
-			if(image.width > image.height) //   Image like this: ||
-			{
-				
-			}else	//   Image like this: ==
-			{
-			}
-			$("overlayimage").style.height = (wndsize().width) + "px";
-			$("overlayimage").style.width = (wndsize().height) + "px";
-			//var image = new PNG(dataArray.message.song.cover);
-			//$("cover").style.background="url(" + dataArray.message.song.cover + ") center center no-repeat";
-			
-			//$("coverimage").reload();
+
+			var image = {width:0,height:0};
+			var screen = {width:0,height:0};
+		//	//alert(window.getComputedStyle($("coverimage")).width);
+		//	screen.width = window.getComputedStyle($("imageoverlay")).width;
+		//	screen.height = window.getComputedStyle($("imageoverlay")).height;
+		//	image.width = window.getComputedStyle($("overlayimage")).width;
+		//	image.height = window.getComputedStyle($("overlayimage")).height;
+		//	cover.width = window.getComputedStyle($("coverimage")).width;
+		//	cover.height = window.getComputedStyle($("coverimage")).height;
+		//	screen.width = ( screen.width.indexOf("px")==-1 ? screen.width : screen.width.substring(0,screen.width.length - 2 ) ); 
+		//	screen.height = ( screen.height.indexOf("px")==-1 ? screen.height : screen.height.substring(0,screen.height.length - 2 ) ); 
+		//	image.width = ( image.width.indexOf("px")==-1 ? image.width : image.width.substring(0,image.width.length - 2 ) ); 
+		//	image.height = ( image.height.indexOf("px")==-1 ? image.height : image.height.substring(0,image.height.length - 2 ) ); 
+		//	var oldImage = image;
+		//	var ratioA =  cover.width / cover.height;
+		//	var ratioB = cover.height / cover.width;	
+
+		//	//alert(image.width + " > " + screen.width + "\n" + image.height + " > " + screen.height + "\n" + image.width + " / " + image.height + " = " + ratioA );
+
+		//	if(image.width > screen.width)
+		//	{
+		//
+		//		image.width = screen.width;
+		//		image.height = screen.width * ratioA;
+		//	}
+		//	//alert(image.width + " > " + screen.width + "\n" + image.height + " > " + screen.height + "\n" + image.width + " / " + image.height + " = " + ratioA );
+
+		//	if(image.height > screen.height)
+		//	{
+		//		image.height = screen.height;
+		//		image.width = screen.height * ratioB;
+		//	}
+		//	//alert(image.width + " > " + screen.width + "\n" + image.height + " > " + screen.height + "\n" + image.width + " / " + image.height + " = " + ratioA );
+
+		//	//$("overlayimage").style.height = (wndsize().width) + "px";
+		//	//$("overlayimage").style.width = (wndsize().height) + "px";
+		//	$("overlayimage").style.height = (image.width) + "px";
+		//	$("overlayimage").style.width = (image.height) + "px";
+		//	
+		//	//var image = new PNG(dataArray.message.song.cover);
+		//	//$("cover").style.background="url(" + dataArray.message.song.cover + ") center center no-repeat";
+		//	
+		//	//$("coverimage").reload();
 			update.cover=true;	
 		}
 		if (update.song != dataArray.message.song.file)
@@ -369,19 +422,37 @@
 	var timeout = window.setTimeout("refreshInfos()", 1000);
 	
 	function zoomImage() {
-		$("imageoverlay").style.display = "inline";
+		$("imageoverlay").style.visibility = "visible";//"inline";
 		
 		
 	}
 	function dezoomImage() {
-		$("imageoverlay").style.display = "none";
+		$("imageoverlay").style.visibility = "hidden";
 		
 		
 	}
-	
-	
-	
-	
+	function calcBpmDiff(realbpm, songbpm){
+		if(songbpm == 0){
+			$("bpmarrowup").style.borderBottomColor = "#f00";
+			$("bpmarrowdown").style.borderTopColor = "#0f0";
+			return;
+		}
+		if (realbpm == songbpm){
+			$("bpm").style.color="#6f6";
+			$("bpmarrowup").style.borderBottomColor = "#666";
+			$("bpmarrowdown").style.borderTopColor = "#666";
+		}else{
+			$("bpm").style.color="#000";
+			if (realbpm < songbpm) {
+				$("bpmarrowup").style.borderBottomColor = "#f00";
+				$("bpmarrowdown").style.borderTopColor = "#666";
+			} else if (realbpm > songbpm) {
+				$("bpmarrowup").style.borderBottomColor = "#666";
+				$("bpmarrowdown").style.borderTopColor = "#0f0";
+			}
+		}
+			
+	}
 
 	function wndsize(){
 		var w = 0;var h = 0;
@@ -413,7 +484,7 @@
 						<div id="songtitle" class="meta full">Unknown Title</div> <div id="songalbum" class="meta left">Unknown Album</div><div id="songartist" class="meta left">Unknown Artist</div><div id="songbpm" class="meta right">0 BPM</div>		
 					</div>
 					<div id="songnotplaying">
-						<div class="meta"> Not Playing. </div>
+						<div class="meta">Not Playing.</div>
 					</div>
 				</div>
 				<br class="clear">
@@ -434,12 +505,18 @@
 					<input id="next" type="button" onclick='ajaxAction("playnext")' value="&#9655;" />
 				</div>
 				<div id="lower_controls">
-					<input type="button" onclick='refreshInfos()' value="&reg;"/>
+					<input type="button" onclick='ajaxAction("fullupdate")' value="&reg;"/>
 					<input type="button" onclick='ajaxAction("forcenext")' value="Force Next"/>
 				</div>
 			</div>
 			<div id="stats" class="right">
-				<div id="bpm"> --- BPM</div>
+				<div class="inline left"  style="display:inline-block; text-align: center;">
+					<div id="bpmarrowup" class="arrow-up" style="display:inline-block; position: relative;"></div>
+					<div id="bpm" class="meta" style="text-align: center">---</div>
+					<div style=" position: relative;top: -1em;">BPM</div>
+					<div style="position: relative;top: -0.5em;display:inline-block;"id="bpmarrowdown" class="arrow-down"></div>
+				</div>
+
 			</div>
 		</div>
 	</div>
