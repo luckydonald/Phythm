@@ -1,6 +1,7 @@
 #!/usr/bin/env python
-import json, random, re, sqlite3, settings, string, socket, SimpleHTTPServer, SocketServer, threading, time
-import eyed3, iotest, moc
+import json, random, re, sqlite3, settings, string, socket, SimpleHTTPServer, SocketServer, threading
+import iotest, time, math #bpm
+import eyed3, moc #id3 and the player
 from mutagen import File #cover artwork
 import base64 #cover artwork
  # as seen in https://github.com/jonashaag/python-moc   -  DOC at http://moc.lophus.org/
@@ -40,9 +41,7 @@ class HTTPserver(threading.Thread):
         Handler = ModHTTPRequestHandler
         
         Handler.bpmServer = self.bpmServer
-    
         httpd = SocketServer.TCPServer(("", self.port), Handler)
-    
         print "HTTP> Serving at port", self.port
         httpd.serve_forever()
         
@@ -57,7 +56,7 @@ class BPMServer():
     playing_index = 0
     played_history = []
     
-    last_tick = time.time()
+    last_index = -1;
     bpmHistory = [0] * settings.conf["average"]
     bpmAverage = 0
     bpm = 0
@@ -101,24 +100,23 @@ class BPMServer():
             print("To Shut down please visit http://localhost:%s/cmd.json?%s via your Browser." % (settings.conf["port"],self.shutdownCommand))
         while (self.keep_running == True):
             
-            if self.bpm != 0 and time.time()-self.last_tick>settings.conf["timeout"]:
-                self.bpm = 0
-            del self.bpmHistory[0]
-            self.bpmHistory.append(self.bpm)
-            self.bpmAverage = (sum(self.bpmHistory)/settings.conf["average"])
-            self.info["bpm"] = self.bpmAverage 
+            self.bpmTick()
+            #del self.bpmHistory[0]
+            #self.bpmHistory.append(self.bpm)
+            self.bpm = (sum(self.bpmHistory)/(settings.conf["average"]* 1.0)) # *1.0 to get a float
+            self.info["bpm"] = self.bpm 
             #print("Run> %s BPM Statistics: Current BPM is %03.2f - Average BPM is %03.2f - Difference is %03.2f" % (self.keep_running, self.bpm,self.bpmAverage, time.time() - self.last_tick))
-            
-            time.sleep(1)
+            print(self.bpmHistory,sum(self.bpmHistory),settings.conf["average"],self.bpm)
+            time.sleep(1) #important for CPU usage.
         
     def bpmTick(self):
         curr = time.time()
-        diff = curr - self.last_tick
-        self.last_tick = curr
-        self.bpm = (1.0 / diff) * 60.0
-        #print("BPM> update to %s" % self.bpm)
-
+        index = int(math.floor(time.time()%60)%settings.conf["average"])
+        self.bpmHistory[index]+= 1
+        if (index != self.last_index):  #having this behind the array[index]+1 because 1 beat per minute is generated to clear the array data. that can either be the while(True) or the first beat. Either way it will get 1 more step per minute which is excluded by this.  
+            self.bpmHistory[index]= 0
         
+        self.last_index = index
         #print("Tick! " + str(diff))
         
     def handleCMD(self, cmd):
