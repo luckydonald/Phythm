@@ -56,6 +56,9 @@ class BPMServer():
     playing_index = 0
     played_history = []
     
+    autoplaynext_enabled = False
+    autoplaynext_endtime = time.time()
+    
     last_index = -1;
     bpmHistory = [0] * settings.conf["average"]
     bpmAverage = 0
@@ -103,10 +106,15 @@ class BPMServer():
             self.bpmTick()
             #del self.bpmHistory[0]
             #self.bpmHistory.append(self.bpm)
-            self.bpm = (sum(self.bpmHistory)/(settings.conf["average"]* 1.0)) # *1.0 to get a float
-            self.info["bpm"] = self.bpm 
+            print (self.autoplaynext_endtime, "<",  time.time())
+            if self.autoplaynext_endtime < time.time():
+                #self.autoplaynext_enabled = False
+                songToPlay = self.getBestMatch(self.bpm,self.diff)
+                print("Main> %i New Song: %s" % (self.playing_index, songToPlay[2]))
+                self.playSong(songToPlay[2])
+                self.updatePlayerStatisInfo(True,True)
+            
             #print("Run> %s BPM Statistics: Current BPM is %03.2f - Average BPM is %03.2f - Difference is %03.2f" % (self.keep_running, self.bpm,self.bpmAverage, time.time() - self.last_tick))
-            print(self.bpmHistory,sum(self.bpmHistory),settings.conf["average"],self.bpm)
             time.sleep(1) #important for CPU usage.
         
     def bpmTick(self):
@@ -114,8 +122,11 @@ class BPMServer():
         index = int(math.floor(time.time()%60)%settings.conf["average"])
         self.bpmHistory[index]+= 1
         if (index != self.last_index):  #having this behind the array[index]+1 because 1 beat per minute is generated to clear the array data. that can either be the while(True) or the first beat. Either way it will get 1 more step per minute which is excluded by this.  
+            self.bpm = (sum(self.bpmHistory)/(settings.conf["average"]* 1.0))*60 # *1.0 to get a float
+            self.info["bpm"] = self.bpm
+            print(self.bpmHistory,sum(self.bpmHistory),settings.conf["average"],self.bpm)
             self.bpmHistory[index]= 0
-        
+             
         self.last_index = index
         #print("Tick! " + str(diff))
         
@@ -137,25 +148,26 @@ class BPMServer():
             print(self.played_history)
             self.playing_index += +1
             if(self.playing_index == len(self.played_history)):
-                songToPlay = self.getBestMatch(self.bpmAverage,self.diff) #should add new song AND jump to new song
+                songToPlay = self.getBestMatch(self.bpm,self.diff) #should add new song AND jump to new song
             print("CMD> %i Next Old Song: %s" % (self.playing_index, self.played_history[self.playing_index]["path"]))
             self.playSong(self.played_history[self.playing_index]["path"])
             self.updatePlayerStatisInfo(True,True)
             return {"status": 0, "message": self.info} 
           
         if cmd.lower() == "forcenext":
-            songToPlay = self.getBestMatch(self.bpmAverage,self.diff)
+            songToPlay = self.getBestMatch(self.bpm,self.diff)
             print("CMD> %i New Song: %s" % (self.playing_index, songToPlay[2]))
             self.playSong(songToPlay[2])
             self.updatePlayerStatisInfo(True,True)
             return {"status": 0, "message": self.info}
             
         if cmd.lower() == "playpause":
-            #songToPlay = self.getBestMatch(self.bpmAverage,self.diff)
+            #songToPlay = self.getBestMatch(self.bpm,self.diff)
             if moc.is_playing():
-                moc.pause()
+                self.pauseSong()
             else:
-                moc.unpause() #TODO: Start again if stopped, to do that, load file again.
+                self.resumeSong()
+                
             self.updatePlayerStatisInfo(False,False)
             print("CMD> updated self.info")
             print(self.info)
@@ -196,14 +208,26 @@ class BPMServer():
                                         "artist":   audiofile.tag.artist
                                         })
             self.playing_index=len(self.played_history)-1 #Reset 
+            db.close()
             return song #stop here            
             
         db.close()
         return self.getBestMatch(bpm,diff+5)
         
     def playSong(self,file):
-        songInfo = moc.quickplay([file])
+        songInfo = moc.quickplay([file])    
+        self.autoplaynext_enabled = True
+        self.autoplaynext_endtime = time.time() + (( songInfo['totalsec'] - songInfo['currentsec'] ) * 1000)
+        return songInfo
+    
+    def pauseSong(self):
+        songInfo = moc.pause()
+        self.autoplaynext_enabled = False
         
+    def resumeSong(self):
+        songInfo = moc.unpause()
+        self.autoplaynext_enabled = True
+        self.autoplaynext_endtime = time.time() + ((songInfo['totalsec'] - songInfo['currentsec'])*1000)
         return songInfo
     
     def getPlayerStatus(self,includeArtwork=False):
