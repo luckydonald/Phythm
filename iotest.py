@@ -1,4 +1,4 @@
-import threading, socket
+import threading, time, socket
 
 class serverThread(threading.Thread):
     
@@ -6,13 +6,32 @@ class serverThread(threading.Thread):
     
     def run(self):
         s = socket.socket()
-        s.bind(("", 8000))
-        s.listen(1)
-        conn, addr = s.accept()
-        conn.setblocking(True)
+        failed=True
+        while failed:
+            print("BPM SERVER> Setting Port 8000")
+            try:
+                s.bind(("", 8000))
+                failed = False
+            except:
+                print("BPM SERVER> Aaaand you failed.")
+                time.sleep(1)
+                
+                
+        #blarg
+             
+
         while True:
-            conn.recv(1)
-            self.bpmServer.bpmTick()
+            try:    
+                s.listen(5)
+                conn, addr = s.accept()
+                #conn.setblocking(True)
+                while True:
+                    conn.recv(1)
+                    self.bpmServer.bpmTick()
+            except:
+                s.close()
+                time.sleep(1)
+                print("BPM SERVER> Restarting...") 
 
 def start(bpmServer):
     s = serverThread()
