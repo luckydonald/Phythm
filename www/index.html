@@ -4,7 +4,7 @@
 	<head>
 	<meta http-equiv="content-type" content="text/html; utf-8">
 	<title> May Contain Ponys.</title>
-	<meta name="viewport" content="width = 420"> 
+	<meta name="viewport" content="width = 400"> 
 	<style>
 	
 	body
@@ -31,6 +31,10 @@
 	#bpm
 	{
 		font-size:3em;	
+	}
+	#progressbar{
+		margin-left: 0;
+		margin-right: 0;
 	}
 	.progressbar-outer
 	{
@@ -68,6 +72,9 @@
 		right: 0;
 		width: 100%;
 	}
+	#rightinfo{
+		display:block;	
+	}
 	#songnotplaying
 	{
 		display: none;
@@ -80,11 +87,9 @@
 		padding-bottom: 4px;
 
 	}
-	#songinfo
+	#songalbum
 	{
-		width:372px;
-		padding-left: 5px;
-
+		margin-right:4px;
 	}
 	
 	.meta
@@ -93,7 +98,6 @@
 		background-color:#cccccc;
 		padding: 2px;
 		margin-top:4px;
-		margin-left:2px;
 		clear: right;
 	}
 	.metafirst
@@ -142,6 +146,7 @@
 		padding: 0 auto !important;
 	}
 	#imageoverlay{
+		z-index: 10;
 		text-align: center;
 		display: inline;
 		visibility:hidden;
@@ -176,6 +181,95 @@
 		text-align: right;	
 	}
 	
+	
+	/*#playpause, #play, #prev, #next {
+		width:80px;
+		height: 80px;
+		position: relative;
+	}
+	#playpause:before {
+		width: 0;
+		height: 0;
+		border-left: 30px solid black;
+		border-right: 30px solid transparent;
+		border-top: 30px solid transparent;
+		border-bottom: 30px solid transparent;
+		position: absolute;
+		content: "";
+		top: 10px;
+		left: 25px;
+	}
+	 
+	#playpause:after {
+		width: 15px;
+		height: 60px;
+		background: black;
+		position: absolute;
+		content: "";
+		top: 10px;
+		right: 15px;
+	}
+	 
+	 */
+	 #playpause, #play, #prev, #next {
+	 	 display:inline-block;
+	 	 margin-left: 20px;
+	 	 margin-top: 20px;
+	 	 margin-bottom: 20px;
+	 }
+	#prev{
+		width: 0; 
+		height: 0; 
+		border-top: 1.6em solid transparent;
+		border-bottom: 1.6em solid transparent;
+		border-right: 2em solid #666;
+	}
+	#prev:before{
+		width: 0; 
+		height: 0; 
+		border-top: 1.0em solid #666;
+		border-bottom: 1.0em solid #666;
+		border-right: 0.5em solid #666;
+		right: 0.2em;
+		position:relative;
+		bottom:0.6em;
+		content: "";
+	}
+	#playpause{
+		width: 0; 
+		height: 0; 
+		border-top: 2em solid transparent;
+		border-bottom: 2em solid transparent;
+		border-left: 2em solid #666; 
+	}
+	#playpause:before{
+		width: 0; 
+		height: 0; 
+		border-top: 1.0em solid transparent;
+		border-bottom: 1.0em solid transparent;
+		border-left: 0.5em solid transparent;
+		right: 0.4em;
+		position:relative;
+		content: "";
+	}
+	#next{
+		width: 0; 
+		height: 0; 
+		border-top: 1.6em solid transparent;
+		border-bottom: 1.6em solid transparent;
+		border-left: 2em solid #666;
+	}
+	#next:after{
+		width: 0; 
+		height: 0; 
+		border-top: 1.0em solid #666;
+		border-bottom: 1.0em solid #666;
+		border-left: 0.5em solid #666;
+		right: 0.4em;
+		position:relative;
+		bottom:0.6em;
+		content: "";
+	}
 		
 	</style>
 	</head>
@@ -305,7 +399,10 @@
 				var element = dataArray.message.history[i];
 				// Do something with element i.
 				var tr = document.createElement('tr');
-				tr.setAttribute('class', (dataArray.message.history_index == i?"current":""));
+				tr.setAttribute('class', (i%2==0?"even":"odd") + (dataArray.message.history_index == i?" current":""));
+				tr.setAttribute('songid', i);
+				tr.setAttribute('id', "tr_"+(dataArray.message.history.length-i-1));
+				tr.setAttribute('onclick', 'ajaxAction("play&id="+this.getAttribute("songid"))');
 	
 				historytable.insertBefore(tr,historytable.childNodes[0]); //Insert as first Element
 	
@@ -334,7 +431,7 @@
 				var historybpm = document.createElement('td');
 				historybpm.setAttribute('class', 'historybpm meta metalast ');//right
 				historybpm.innerHTML = element.bpm;
-				tr.appendChild(historybpm);			
+				tr.appendChild(historybpm);
 			}
 			$("historypane").appendChild(historytable);
 			update.history=true;
@@ -478,14 +575,15 @@
 			<div id="cover" class="clear">
 				<img id="coverimage" onclick="zoomImage()" scr="" />
 			</div>
-			<div id="rightinfo">
+			<div id="rightinfo" class="clear">
 				<div id="songinfo" class="songinfo">
-					<div id="songmeta">
-						<div id="songtitle" class="meta full">Unknown Title</div> <div id="songalbum" class="meta left">Unknown Album</div><div id="songartist" class="meta left">Unknown Artist</div><div id="songbpm" class="meta right">0 BPM</div>		
-					</div>
 					<div id="songnotplaying">
 						<div class="meta">Not Playing.</div>
 					</div>
+					<div id="songmeta">
+						<div id="songtitle" class="meta">Unknown Title</div> <div id="songalbum" class="meta left">Unknown Album</div><div id="songartist" class="meta left">Unknown Artist</div><div id="songbpm" class="meta right">0 BPM</div>		
+					</div>
+					
 				</div>
 				<br class="clear">
 				<div id="progressbar" class="segment">
@@ -493,24 +591,31 @@
 						<div class="progressbar-inner left" id="songprogress">--:--</div>
 					</div>
 					<div id="songtotal" class="right" style="display:inline-block;">--:--</div>
+
 				</div>
 			</div>
 		</div>
 		<br class="clear">
 		<div id="second_row" class="segment">
-			<div id="controls" class="left">
+			<div id="controls" class="">
 				<div id="upper_controls">
-					<input id="prev" type="button" value="&#9665;" onclick='ajaxAction("playlast")'/>
+					<!--<input id="prev" type="button" value="&#9665;" onclick='ajaxAction("playlast")'/>
 					<input id="playpause" type="button" value="&#65517;&nbsp;&#9658;" onclick='ajaxAction("playpause")'/>
-					<input id="next" type="button" onclick='ajaxAction("playnext")' value="&#9655;" />
+					<input id="next" type="button" onclick='ajaxAction("playnext")' value="&#9655;" />-->
 				</div>
 				<div id="lower_controls">
 					<input type="button" onclick='ajaxAction("fullupdate")' value="&reg;"/>
 					<input type="button" onclick='ajaxAction("forcenext")' value="Force Next"/>
 				</div>
+				<div id="new_controls" class="left">
+					<div id="prev"       onclick='ajaxAction("playlast")'></div>
+					<div id="play"      onclick='ajaxAction("forcenext")'></div>
+					<div id="playpause" onclick='ajaxAction("playpause")'></div>
+					<div id="next"       onclick='ajaxAction("playnext")'></div>
+					 
 			</div>
-			<div id="stats" class="right">
-				<div class="inline left"  style="display:inline-block; text-align: center;">
+			<div id="stats" class="right" style="display:relative; text-align: right;">
+				<div class="inline right"  style="display:inline-block; text-align: center;">
 					<div id="bpmarrowup" class="arrow-up" style="display:inline-block; position: relative;"></div>
 					<div id="bpm" class="meta" style="text-align: center">---</div>
 					<div style=" position: relative;top: -1em;">BPM</div>

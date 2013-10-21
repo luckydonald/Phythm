@@ -142,7 +142,20 @@ class BPMServer():
             self.playSong(self.played_history[self.playing_index]["path"])
             self.updatePlayerStatisInfo(True, True)
             return {"status": 0, "message": self.info}
-            
+        
+        if cmd.lower().startswith('play&id='):
+            rg = re.compile('(play&id=)'+'(\\d+)',re.IGNORECASE|re.DOTALL)
+            m = rg.search(cmd.lower())
+            if m:
+                print(m)
+                self.playing_index = index=int(m.group(2))
+                
+                print("CMD> %i Last Old Song: %s" % (self.playing_index, self.played_history[self.playing_index]["path"]))
+                self.playSong(self.played_history[self.playing_index]["path"])
+                self.updatePlayerStatisInfo(True, True)
+                return {"status": 0, "message": self.info}
+                
+            return {"status": -1, "message": "Error in Regular Expression. Int not found."}
         if cmd.lower() == "playnext":
             print(self.played_history)
             self.playing_index += +1
