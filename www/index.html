@@ -35,10 +35,11 @@
 	#progressbar{
 		margin-left: 0;
 		margin-right: 0;
+		padding-left: 0;
+		padding-right: 0;
 	}
 	.progressbar-outer
 	{
-		width:300px;
 		padding:2px;
 		background-color:#666;
 		
@@ -52,7 +53,17 @@
 		background-color:orange;
 		//border:1px solid lightgreen;
 		border-radius: 20px;
+		padding-top: 0.05em;
+		padding-bottom: 0.05em;
+
 		
+	}
+	#songtotal{
+		margin-left: 10px;
+		padding-top: 0.2em;
+		padding-bottom: 0.15em;
+		margin-top: 0;
+		margin-right	: 0;
 	}
 	.left
 	{
@@ -587,10 +598,11 @@
 				</div>
 				<br class="clear">
 				<div id="progressbar" class="segment">
-					<div class="progressbar-outer" style="display:inline-block;">
+					<div id="songtotal" class="right meta" style="">--:--</div>
+
+					<div class="progressbar-outer" style=" overflow: hidden">
 						<div class="progressbar-inner left" id="songprogress">--:--</div>
 					</div>
-					<div id="songtotal" class="right" style="display:inline-block;">--:--</div>
 
 				</div>
 			</div>
