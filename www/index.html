@@ -3,21 +3,24 @@
 	<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 	<head>
 	<meta http-equiv="content-type" content="text/html; utf-8">
-	<title> May Contain Ponys.</title>
-	<meta name="viewport" content="width = 400"> 
+	<title>May Contain Ponys. /)</title>
+	<meta name="viewport" content="width=420"> 
 	<style>
 	
 	body
 	{
-		width:420px;
+		width:400px;
 	
 	}
 	#infobox, #historypane
 	{
 		background-color: #f0f0f0;
 		border-radius: 5px;
-		padding: 5px;
 		width:400px;
+	}
+	#infobox
+	{
+		padding: 5px;
 	}
 	.historyelement
 	{
@@ -63,7 +66,7 @@
 		padding-top: 0.2em;
 		padding-bottom: 0.15em;
 		margin-top: 0;
-		margin-right	: 0;
+		margin-right: 0;
 	}
 	.left
 	{
@@ -159,11 +162,11 @@
 	#imageoverlay{
 		z-index: 10;
 		text-align: center;
-		display: inline;
+		display: none;
 		visibility:hidden;
 		width:100%;
 		height:100%;
-		background-color:rgba(0,0,0,0.5);
+		background-color:rgba(0,0,0,0.7);
 		position: absolute;
 		top:0;
 		left:0;
@@ -281,8 +284,44 @@
 		bottom:0.6em;
 		content: "";
 	}
+	.hcenter{
+		margin: 'auto!';
+		margin: auto!;
+		margin: auto;
+		position: 'absolute';
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		left: 0;
+		right: 0;
+	}
 		
 	</style>
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	</head>
 	<body>
 	<script type="text/javascript">
@@ -460,22 +499,62 @@
 			}
 			$("coverimage").src=src;
 			$("overlayimage").src=src;
-
+/*
 			var image = {width:0,height:0};
 			var screen = {width:0,height:0};
-		//	//alert(window.getComputedStyle($("coverimage")).width);
-		//	screen.width = window.getComputedStyle($("imageoverlay")).width;
-		//	screen.height = window.getComputedStyle($("imageoverlay")).height;
-		//	image.width = window.getComputedStyle($("overlayimage")).width;
-		//	image.height = window.getComputedStyle($("overlayimage")).height;
-		//	cover.width = window.getComputedStyle($("coverimage")).width;
-		//	cover.height = window.getComputedStyle($("coverimage")).height;
-		//	screen.width = ( screen.width.indexOf("px")==-1 ? screen.width : screen.width.substring(0,screen.width.length - 2 ) ); 
-		//	screen.height = ( screen.height.indexOf("px")==-1 ? screen.height : screen.height.substring(0,screen.height.length - 2 ) ); 
-		//	image.width = ( image.width.indexOf("px")==-1 ? image.width : image.width.substring(0,image.width.length - 2 ) ); 
-		//	image.height = ( image.height.indexOf("px")==-1 ? image.height : image.height.substring(0,image.height.length - 2 ) ); 
-		//	var oldImage = image;
-		//	var ratioA =  cover.width / cover.height;
+			
+			var imageoverlayDisplayStyle= $("imageoverlay").style.display
+			$("imageoverlay").style.display="inline";
+			screen.width = window.getComputedStyle($("imageoverlay")).width;
+			screen.height = window.getComputedStyle($("imageoverlay")).height;
+			screen.width = $("imageoverlay").display=imageoverlayDisplayStyle;
+			var w = window,
+			    d = document,
+			    e = d.documentElement,
+			    g = d.getElementsByTagName('body')[0],
+			    x = w.innerWidth || e.clientWidth || g.clientWidth,
+			    y = w.innerHeight|| e.clientHeight|| g.clientHeight;
+			screen = {width:x,height:y};
+
+			
+			image.width = window.getComputedStyle($("overlayimage")).width;
+			image.height = window.getComputedStyle($("overlayimage")).height;
+			
+			cover.width = window.getComputedStyle($("coverimage")).width;
+			cover.height = window.getComputedStyle($("coverimage")).height;
+			
+			//screen.width = ( screen.width.indexOf("px")==-1 ? screen.width : screen.width.substring(0,screen.width.length - 2 ) ); 
+			//screen.height = ( screen.height.indexOf("px")==-1 ? screen.height : screen.height.substring(0,screen.height.length - 2 ) ); 
+			
+			image.width = ( image.width.indexOf("px")==-1 ? image.width : image.width.substring(0,image.width.length - 2 ) ); 
+			image.height = ( image.height.indexOf("px")==-1 ? image.height : image.height.substring(0,image.height.length - 2 ) ); 
+			
+			var widthRatio = screen.width / image.width;
+			var heightRatio = screen.height / image.height;
+
+			var ratio = widthRatio; //default to the width ratio until proven wrong
+
+			if (widthRatio * image.height > screen.height) {
+				ratio = heightRatio;
+			}
+
+			//now resize the image relative to the ratio
+			image.width = image.width * ratio;
+			image.height = image.height * ratio;
+			*/
+			/*$img.css({
+			    margin: 'auto',
+			    position: 'absolute',
+			    top: 0,
+			    bottom: 0,
+			    left: 0,
+			    right: 0
+			});
+			*/
+			
+			
+			
+		/*//	var ratioA =  cover.width / cover.height;
 		//	var ratioB = cover.height / cover.width;	
 
 		//	//alert(image.width + " > " + screen.width + "\n" + image.height + " > " + screen.height + "\n" + image.width + " / " + image.height + " = " + ratioA );
@@ -496,14 +575,22 @@
 		//	//alert(image.width + " > " + screen.width + "\n" + image.height + " > " + screen.height + "\n" + image.width + " / " + image.height + " = " + ratioA );
 
 		//	//$("overlayimage").style.height = (wndsize().width) + "px";
-		//	//$("overlayimage").style.width = (wndsize().height) + "px";
-		//	$("overlayimage").style.height = (image.width) + "px";
-		//	$("overlayimage").style.width = (image.height) + "px";
-		//	
+		//	//$("overlayimage").style.width = (wndsize().height) + "px";*/
+		//	var w = window,
+		//	    d = document,
+		//	    e = d.documentElement,
+		//	    g = d.getElementsByTagName('body')[0],
+		//	    x = w.innerWidth || e.clientWidth || g.clientWidth,
+		//	    y = w.innerHeight|| e.clientHeight|| g.clientHeight;
+		//	var screen = {width:x,height:y};
+		//	$("overlayimage").style.maxWidth = (screen.width) + "px";
+		//	$("overlayimage").style.maxHeight = (screen.height) + "px";
+			
+		/*//	
 		//	//var image = new PNG(dataArray.message.song.cover);
 		//	//$("cover").style.background="url(" + dataArray.message.song.cover + ") center center no-repeat";
 		//	
-		//	//$("coverimage").reload();
+		//	//$("coverimage").reload();*/
 			update.cover=true;	
 		}
 		if (update.song != dataArray.message.song.file)
@@ -530,12 +617,17 @@
 	var timeout = window.setTimeout("refreshInfos()", 1000);
 	
 	function zoomImage() {
-		$("imageoverlay").style.visibility = "visible";//"inline";
+		$("imageoverlay").style.visibility = "visible";
+		$("imageoverlay").style.display = "inline";//"inline";
+		calculateImgSize();
+		
 		
 		
 	}
 	function dezoomImage() {
 		$("imageoverlay").style.visibility = "hidden";
+		$("imageoverlay").style.display = "none";//"inline";
+
 		
 		
 	}
@@ -579,8 +671,63 @@
 		}
 		return {width:w,height:h};
 	}
+	function calculateImgSize(){
+		var w = window,
+		    d = document,
+		    e = d.documentElement,
+		    g = d.getElementsByTagName('body')[0],
+		    x = w.innerWidth || e.clientWidth || g.clientWidth,
+		    y = w.innerHeight|| e.clientHeight|| g.clientHeight;
+		var screen = {width:x,height:y};
+		$("overlayimage").style.maxWidth = (screen.width) + "px";
+		$("overlayimage").style.maxHeight = (screen.height) + "px";
+	}
+	if(typeof window.orientation === 'undefined') {
+		/* use media query technique, fix for mobile firefox */
+		
+		var test = window.matchMedia("(orientation: portrait)");
+		test.addListener(function(m) {
+			if(m.matches) {
+				// Changed to portrait
+				//alert('portrait');
+				calculateImgSize();
+			}else {
+				// Changed to landscape
+				//alert('landscape');
+				calculateImgSize();
+			}
+		});
+	} else {
+		/*use orientationchange event handler*/
+		window.addEventListener('orientationchange', calculateImgSize);
+
+	}
+	
 </script>
-	<div id="imageoverlay" onclick="dezoomImage()"><img id="overlayimage" onclick="dezoomImage()" scr="" /></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	<div id="imageoverlay" onclick="dezoomImage()" class="hcenter"><img id="overlayimage" onclick="dezoomImage()" scr="" class="hcenter" /></div>
 	<div id="infobox" class="clear">
 		<div id="first_row">
 			<div id="cover" class="clear">
@@ -611,12 +758,14 @@
 		<div id="second_row" class="segment">
 			<div id="controls" class="">
 				<div id="upper_controls">
-					<!--<input id="prev" type="button" value="&#9665;" onclick='ajaxAction("playlast")'/>
-					<input id="playpause" type="button" value="&#65517;&nbsp;&#9658;" onclick='ajaxAction("playpause")'/>
-					<input id="next" type="button" onclick='ajaxAction("playnext")' value="&#9655;" />-->
+					<!--
+						<input id="prev" type="button" value="prev" onclick='ajaxAction("playlast")'/>
+						<input id="playpause" type="button" value="pause/play" onclick='ajaxAction("playpause")'/>
+						<input id="next" type="button" onclick='ajaxAction("playnext")' value="next" />
+					-->
 				</div>
 				<div id="lower_controls">
-					<input type="button" onclick='ajaxAction("fullupdate")' value="&reg;"/>
+					<input type="button" onclick='ajaxAction("fullupdate")' value="(U)pdate	"/>
 					<input type="button" onclick='ajaxAction("forcenext")' value="Force Next"/>
 				</div>
 				<div id="new_controls" class="left">
