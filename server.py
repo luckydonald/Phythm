@@ -6,6 +6,7 @@ from mutagen import File #cover artwork
 from PIL import Image #better cover artwork processing.
 import base64 #cover artwork
  # as seen in https://github.com/jonashaag/python-moc   -  DOC at http://moc.lophus.org/
+import module_locator
 
 
 
@@ -59,7 +60,9 @@ class BPMServer():
     
     autoplaynext_enabled = True
     autoplaynext_endtime = time.time()
-    
+    www_path = module_locator.module_path() + "/www/" #get
+    print("Webdir> %s" % www_path)
+
     last_tick =  time.time(); #hui
     bpmHistory = [160] * settings.conf["average"]
     bpmAverage = 0
@@ -301,6 +304,8 @@ class BPMServer():
                 try:
                     file = File(songInfo['file'])
                     artwork = file.tags['APIC:'].data
+                    #f = open("/music/cover.png", "w")
+                    #f.write(artwork)
                     artwork_string = "data:image/jpeg;charset=utf-8;base64," + base64.b64encode(artwork)
                 except KeyError:
                     artwork_string = ""

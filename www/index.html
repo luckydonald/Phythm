@@ -5,6 +5,7 @@
 	<meta http-equiv="content-type" content="text/html; utf-8">
 	<title>May Contain Ponys. /)</title>
 	<meta name="viewport" content="width=420"> 
+	<meta name="apple-mobile-web-app-capable" content="yes" />
 	<style>
 	
 	body
@@ -31,10 +32,6 @@
 		padding-left:2px;
 		padding-right:2px;
 	}
-	#bpm
-	{
-		font-size:3em;	
-	}
 	#progressbar{
 		margin-left: 0;
 		margin-right: 0;
@@ -45,7 +42,6 @@
 	{
 		padding:2px;
 		background-color:#666;
-		
 		//border:1px solid black;
 		border-radius: 20px;
 		text-align:center;
@@ -111,7 +107,7 @@
 		-moz-animation: notplayingpusate 1.0s infinite alternate;
 		-animation: notplayingpusate 1.0s infinite alternate;
 		color:red;
-
+		font-size:2em;	
 	}
 	@-webkit-keyframes notplayingpusate {
 		from {
@@ -262,6 +258,7 @@
 	
 	#bpm {
 		text-align: center;
+		font-size:3em;
 	}
 	.historyid{
 		text-align: right;	
@@ -366,6 +363,10 @@
 	}
 	#bpmShift{
 		color: grey;	
+	}
+	.cut{
+		white-space: nowrap;
+		overflow: hidden;
 	}
 		
 	</style>
@@ -812,7 +813,7 @@
 		<div id="rightinfo" class="">
 			<div id="songinfo" class="songinfo">
 				<div id="messages">
-					<div class="meta" id="songnotplayingtext">Not Playing.</div>
+					
 				</div>
 				<div id="songmeta">
 					<div id="songtitle" class="meta">Unknown Title</div> <div id="songalbum" class="meta left">Unknown Album</div><div id="songartist" class="meta left">Unknown Artist</div><div id="songbpm" class="meta right">0 BPM</div>		
@@ -848,6 +849,7 @@
 				<div id="playpause" onclick='ajaxAction(commands.pause)'></div>
 				<div id="next"       onclick='ajaxAction(commands.next)'></div>
 			</div>
+			
 			<div id="stats" class="right" style="display:relative; text-align: right;">
 				<div class="inline right"  style="display:inline-block; text-align: center;">
 					<div id="bpmarrowup" class="arrow-up" onclick="pitchBPM('+10')" style="display:inline-block; position: relative;bottom: -1.0em; z-index:2"></div>
@@ -856,6 +858,9 @@
 					<div style="position: relative;top: -1em;">BPM</div>
 					<div style="position: relative;top: -0.5em;display:inline-block;z-index:2"id="bpmarrowdown" onclick="pitchBPM('-10')" class="arrow-down"></div>
 				</div>
+			</div>
+			<div class="left">
+				<div class="meta" id="songnotplayingtext">Not Playing.</div>
 			</div>
 		</div>
 	</div>
