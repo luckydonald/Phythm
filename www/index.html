@@ -80,6 +80,17 @@
 	{
 		float: center;
 	} 
+	.blockleft{
+		clear: left;
+	}
+	.blockright{
+		clear: right;
+	}
+	.blockboth{
+		clear: both;
+	}
+	
+		
 	.full
 	{
 		left: 0;
@@ -95,6 +106,65 @@
 		color:red;
 		
 	}
+	#songnotplayingtext {
+		-webkit-animation: notplayingpusate 1.0s infinite alternate;
+		-moz-animation: notplayingpusate 1.0s infinite alternate;
+		-animation: notplayingpusate 1.0s infinite alternate;
+		color:red;
+
+	}
+	@-webkit-keyframes notplayingpusate {
+		from {
+			color: 		  #cc0000;
+			background-color: #cccccc;
+		}
+		to {
+			color: 		  #ff0000;
+			background-color: #ffcccc;
+		}
+	}
+	@-moz-keyframes notplayingpusate {
+		from {
+			color: 		  #cc0000;
+			background-color: #cccccc;
+		}
+		to {
+			color: 		  #ff0000;
+			background-color: #ff0000;
+		}
+	}
+	@keyframes notplayingpusate {
+		from {
+			color: 		  #cc0000;
+			background-color: #cccccc;
+		}
+		to {
+			color: 		  #ff0000;
+			background-color: #ffcccc;
+		}
+	}
+	
+	.error {
+		-webkit-animation: errorpusate 1s infinite alternate;
+		-moz-animation: errorpusate 1s infinite alternate;
+		-animation: errorpusate 1s infinite alternate;
+		text-shadow: 0 0 8px #ccc;
+	}
+	@-webkit-keyframes errorpusate {
+		from { box-shadow: 0 0 10px #333; }
+		to { box-shadow: 0 0 20px #c00; }
+	}
+	@-moz-keyframes errorpusate {
+		from { box-shadow: 0 0 10px #333; }
+		to { box-shadow: 0 0 20px #c00; }
+	}
+	@keyframes errorpusate {
+		from { box-shadow: 0 0 10px #333; }
+		to { box-shadow: 0 0 20px #c00; }
+	}
+	
+	
+	
 	#songmeta
 	{
 		display: block;
@@ -161,7 +231,7 @@
 		display:block;
 		padding: 0 auto !important;
 	}
-	#imageoverlay{
+	.overlay{
 		z-index: 10;
 		text-align: center;
 		display: none;
@@ -294,7 +364,7 @@
 		left: 0;
 		right: 0;
 	}
-	#bpmoffset{
+	#bpmShift{
 		color: grey;	
 	}
 		
@@ -331,6 +401,14 @@
 		song:"",
 		cover: false,
 		history: false
+	}
+	var commands = {
+		play: "",
+		pause: "playpause",
+		next: "playnext",
+		last: "playlast",
+		forceNext: "forcenext",
+		fullUpdate: "fullupdate"
 	}
 	
 	function ajaxRequest(){
@@ -387,31 +465,31 @@
 		document.title = infostring;
 		
 		$("bpm").innerHTML=Math.round(dataArray.message.bpm);
-		$("bpmoffset").innerHTML = 
-		(dataArray.message.bpmShift==0  ?  "&nbsp;" : (dataArray.message.bpmShift<0 ? "" : "+" ) + dataArray.message.bpmShift + "BPM");
+		$("bpmShift").innerHTML = dataArray.message.bpmShift + " BPM";
+			//(dataArray.message.bpmShift==0  ?  "&nbsp;" : (dataArray.message.bpmShift<0 ? "" : "+" ) + dataArray.message.bpmShift + "BPM");
 
 		if(notplaying)
 		{
 			//$("songmeta").style.display="none";
-			$("songnotplaying").style.display="block";
+			$("songnotplayingtext").style.display="block";
 			if(stopped)
 			{
 				$("songprogress").innerHTML = "--:--";
 				$("songprogress").style.width = "0px";
 				$("songtotal").innerHTML = "--:--";
-				$("songnotplaying").style.display="block";
+				$("songnotplayingtext").style.display="block";
 
 			}
 		}
 		else
 		{
-			$("songnotplaying").style.display="none";
+			$("songnotplayingtext").style.display="none";
 			$("songmeta").style.display="block";	
 		}
 		$("songtitle").innerHTML = ( stopped ? "" : (dataArray.message.song.title == "" ? "&nbsp;&nbsp;-&nbsp;&nbsp;" : dataArray.message.song.title));
 		$("songalbum").innerHTML = ( stopped ? "" : (dataArray.message.song.album == "" ? "&nbsp;&nbsp;-&nbsp;&nbsp;" : dataArray.message.song.album));	
 		$("songartist").innerHTML = ( stopped ? "" : (dataArray.message.song.artist == "" ? "&nbsp;&nbsp;-&nbsp;&nbsp;" : dataArray.message.song.artist));
-		$("songbpm").innerHTML = ( stopped ? "0" : dataArray.message.song.bpm );
+		$("songbpm").innerHTML = ( stopped ? "0" : (dataArray.message.song.title == "" ? "&nbsp;&nbsp;-&nbsp;&nbsp;" : dataArray.message.song.bpm));
 		calcBpmDiff(Math.round(dataArray.message.bpm),(stopped ? 0 : dataArray.message.song.bpm));
 		
 		var max = dataArray.message.song.totalsec;
@@ -568,19 +646,32 @@
 	
 	function zoomImage() {
 		$("imageoverlay").style.visibility = "visible";
-		$("imageoverlay").style.display = "inline";//"inline";
-		calculateImgSize();
-		
-		
-		
+		$("imageoverlay").style.display = "inline";
+		calculateImgSize();	
 	}
 	function dezoomImage() {
 		$("imageoverlay").style.visibility = "hidden";
-		$("imageoverlay").style.display = "none";//"inline";
-
-		
+		$("imageoverlay").style.display = "none";
+	}
+	
+	
+	
+	function showError(message) {
+		$("erroroverlay").style.visibility = "visible";
+		$("erroroverlay").style.display = "inline";
+		$("error").innerText = error;
 		
 	}
+	function hideError() {
+		$("erroroverlay").style.visibility = "hidden";
+		$("erroroverlay").style.display = "none";
+	}
+	
+	function hideAll(){
+		dezoomImage();
+		hideError();
+	}
+	
 	function calcBpmDiff(realbpm, songbpm){
 		if(songbpm == 0){
 			$("bpmarrowup").style.borderBottomColor = "#f00";
@@ -621,6 +712,8 @@
 		}
 		return {width:w,height:h};
 	}
+	
+	//using a fancy var block rulez!
 	function calculateImgSize(){
 		var w = window,
 		    d = document,
@@ -632,18 +725,16 @@
 		$("overlayimage").style.maxWidth = (screen.width) + "px";
 		$("overlayimage").style.maxHeight = (screen.height) + "px";
 	}
+	
 	if(typeof window.orientation === 'undefined') {
 		/* use media query technique, fix for mobile firefox */
-		
 		var test = window.matchMedia("(orientation: portrait)");
 		test.addListener(function(m) {
 			if(m.matches) {
 				// Changed to portrait
-				//alert('portrait');
 				calculateImgSize();
 			}else {
 				// Changed to landscape
-				//alert('landscape');
 				calculateImgSize();
 			}
 		});
@@ -653,38 +744,38 @@
 
 	}
 	
-	document.addEventListener('onkeypress', function(e){
-		switch (e) {
+	document.onkeypress = (function(e){
+		switch (e.keyCode) {
 			case 39:
 				//right
 				//next
-				
+				ajaxAction(commands.next);
 				break;
 			case  37:
 				//left
 				//prev
-				
+				ajaxAction(commands.last);
 				break;
 			case 32:
 				//space
 				//pause
-				
+				ajaxAction(commands.pause);
 				break;
 			case 13:
 				//enter
 				//cover
-				
+				hideError();
 				break;
 			case 27:
 				//esc
 				//leave cover
-				
+				hideAll();
 				break;
-		}
-			
-	
+		};	
 	});  
 	
+	document.addEventListener('onkeypress',document.onkeypress);   //what a trick
+
 </script>
 
 
@@ -709,65 +800,62 @@
 
 
 
-	<div id="imageoverlay" onclick="dezoomImage()" class="hcenter"><img id="overlayimage" onclick="dezoomImage()" scr="" class="hcenter" /></div>
-	<div id="infobox" class="clear">
-		<div id="first_row">
-			<div id="cover" class="clear">
-				<img id="coverimage" onclick="zoomImage()" scr="" />
-			</div>
-			<div id="rightinfo" class="clear">
-				<div id="songinfo" class="songinfo">
-					<div id="songnotplaying">
-						<div class="meta">Not Playing.</div>
-					</div>
-					<div id="songmeta">
-						<div id="songtitle" class="meta">Unknown Title</div> <div id="songalbum" class="meta left">Unknown Album</div><div id="songartist" class="meta left">Unknown Artist</div><div id="songbpm" class="meta right">0 BPM</div>		
-					</div>
-					
-				</div>
-				<br class="clear">
-				<div id="progressbar" class="segment">
-					<div id="songtotal" class="right meta" style="">--:--</div>
+<div id="imageoverlay" class="overlay" onclick="dezoomImage()" class="hcenter"><img id="overlayimage" onclick="dezoomImage()" scr="" class="hcenter" /></div>
+<div id="erroroverlay" class="overlay" onclick="hideError()" class="hcenter"><div class="hcenter"><div class="center meta error clear" id="error">Example Error Occurred.</div></div></div>
 
-					<div class="progressbar-outer" style=" overflow: hidden">
-						<div class="progressbar-inner left" id="songprogress">--:--</div>
-					</div>
+<div id="infobox" class="clear">
+	<div id="first_row">
 
+		<div id="cover" class="clear">
+			<img id="coverimage" onclick="zoomImage()" scr="" style="z-index:-1" />
+		</div>
+		<div id="rightinfo" class="">
+			<div id="songinfo" class="songinfo">
+				<div id="messages">
+					<div class="meta" id="songnotplayingtext">Not Playing.</div>
 				</div>
+				<div id="songmeta">
+					<div id="songtitle" class="meta">Unknown Title</div> <div id="songalbum" class="meta left">Unknown Album</div><div id="songartist" class="meta left">Unknown Artist</div><div id="songbpm" class="meta right">0 BPM</div>		
+				</div>
+				
 			</div>
 		</div>
-		<br class="clear">
-		<div id="second_row" class="segment">
-			<div id="controls" class="">
-				<div id="upper_controls">
-					<!--
-						<input id="prev" type="button" value="prev" onclick='ajaxAction("playlast")'/>
-						<input id="playpause" type="button" value="pause/play" onclick='ajaxAction("playpause")'/>
-						<input id="next" type="button" onclick='ajaxAction("playnext")' value="next" />
-					-->
-				</div>
-				<div id="lower_controls">
-					<input type="button" onclick='ajaxAction("fullupdate")' value="Update	"/>
-					<input type="button" onclick='ajaxAction("forcenext")' value="Force Next"/>
-					<div class="meta"    onclick="pitchBPM('180')">180</div>
-					<div class="meta"    onclick="pitchBPM('0')">0</div>
-				</div>
-				<div id="new_controls" class="left">
-					<div id="prev"       onclick='ajaxAction("playlast")'></div>
-					<div id="play"      onclick='ajaxAction("forcenext")'></div>
-					<div id="playpause" onclick='ajaxAction("playpause")'></div>
-					<div id="next"       onclick='ajaxAction("playnext")'></div>
-					 
+		<div id="progressbar" class="segment blockleft">
+			<div id="songtotal" class="right meta" style="">--:--</div>
+
+			<div class="progressbar-outer" style="overflow: hidden">
+				<div class="progressbar-inner left" id="songprogress">--:--</div>
+			</div>
+
+		</div>
+	</div>
+	<br class="clear">
+	<div id="second_row" class="segment">
+		<div id="controls" class="">
+			<div id="upper_controls">
+				
+			</div>
+			<div id="lower_controls">
+				<div class="meta clear"    onclick="ajaxAction(commands.fullUpdate)">Update</div>
+				<div class="meta clear"    onclick="ajaxAction(commands.forceNext)">Force Next</div>
+				<div class="meta clear"    onclick="pitchBPM('180')">Shift with 180 BPM</div>
+				<div class="meta clear"    onclick="pitchBPM('0')">Shift with 0 BPM</div>
+				<div class="meta clear"    onclick="showError('new ExampleError.throw()')">Example Error</div>
+			</div>
+			<div id="new_controls" class="left">
+				<div id="prev"       onclick='ajaxAction(commands.last)'></div>
+				<div id="play"      onclick='ajaxAction(commands.forceNext)'></div>
+				<div id="playpause" onclick='ajaxAction(commands.pause)'></div>
+				<div id="next"       onclick='ajaxAction(commands.next)'></div>
 			</div>
 			<div id="stats" class="right" style="display:relative; text-align: right;">
 				<div class="inline right"  style="display:inline-block; text-align: center;">
 					<div id="bpmarrowup" class="arrow-up" onclick="pitchBPM('+10')" style="display:inline-block; position: relative;bottom: -1.0em; z-index:2"></div>
-					<div id="bpmoffset" class="" style=" position: relative;bottom: -1.0em;">&nbsp;</div>
+					<div id="bpmShift" class="" style=" position: relative;bottom: -1.0em;">&nbsp;</div>
 					<div id="bpm" class="meta" style="text-align: center" onclick="pitchBPM('0')">---</div>
 					<div style="position: relative;top: -1em;">BPM</div>
 					<div style="position: relative;top: -0.5em;display:inline-block;z-index:2"id="bpmarrowdown" onclick="pitchBPM('-10')" class="arrow-down"></div>
 				</div>
-
 			</div>
 		</div>
 	</div>
@@ -776,11 +864,11 @@
 		
 		
 	</div>
-	<br>
-	<br>
-	<br>
-	<br>
-	<hr>
-	The Pinkie Pie Is A Lie! 
-	</body>
-	</html>
+<br>
+<br>
+<br>
+<br>
+<hr>
+The Pinkie Pie Is A Lie! 
+</body>
+</html>
