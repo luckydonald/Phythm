@@ -92,6 +92,7 @@
 	#songnotplaying
 	{
 		display: none;
+		color:red;
 		
 	}
 	#songmeta
@@ -113,6 +114,7 @@
 		padding: 2px;
 		margin-top:4px;
 		clear: right;
+		text-overflow: ellipsis;
 	}
 	.metafirst
 	{
@@ -285,15 +287,15 @@
 		content: "";
 	}
 	.hcenter{
-		margin: 'auto!';
-		margin: auto!;
-		margin: auto;
-		position: 'absolute';
+		margin: auto!important;
 		position: absolute;
 		top: 0;
 		bottom: 0;
 		left: 0;
 		right: 0;
+	}
+	#bpmoffset{
+		color: grey;	
 	}
 		
 	</style>
@@ -385,16 +387,20 @@
 		document.title = infostring;
 		
 		$("bpm").innerHTML=Math.round(dataArray.message.bpm);
+		$("bpmoffset").innerHTML = 
+		(dataArray.message.bpmPitch==0  ?  "&nbsp;" : (dataArray.message.bpmPitch<0 ? "" : "+" ) + dataArray.message.bpmPitch + "BPM");
 
 		if(notplaying)
 		{
-			$("songmeta").style.display="none";
+			//$("songmeta").style.display="none";
 			$("songnotplaying").style.display="block";
 			if(stopped)
 			{
 				$("songprogress").innerHTML = "--:--";
 				$("songprogress").style.width = "0px";
 				$("songtotal").innerHTML = "--:--";
+				$("songnotplaying").style.display="block";
+
 			}
 		}
 		else
@@ -404,9 +410,10 @@
 		}
 		$("songtitle").innerHTML = ( stopped ? "" : (dataArray.message.song.title == "" ? "&nbsp;&nbsp;-&nbsp;&nbsp;" : dataArray.message.song.title));
 		$("songalbum").innerHTML = ( stopped ? "" : (dataArray.message.song.album == "" ? "&nbsp;&nbsp;-&nbsp;&nbsp;" : dataArray.message.song.album));	
-		$("songartist").innerHTML = ( stopped ? "" : (dataArray.message.song.artist == "" ? "&nbsp;&nbsp;-&nbsp;&nbsp;" : dataArray.message.song.artist));	
+		$("songartist").innerHTML = ( stopped ? "" : (dataArray.message.song.artist == "" ? "&nbsp;&nbsp;-&nbsp;&nbsp;" : dataArray.message.song.artist));
 		$("songbpm").innerHTML = ( stopped ? "0" : dataArray.message.song.bpm );
 		calcBpmDiff(Math.round(dataArray.message.bpm),(stopped ? 0 : dataArray.message.song.bpm));
+		
 		var max = dataArray.message.song.totalsec;
 		var curr = dataArray.message.song.currentsec;
 		var progress = ((100/max)*curr);	
@@ -426,10 +433,23 @@
 		
 		progressbar.innerHTML=( stopped ? "--:--" : secondsToTomeString(curr));
 		$("songtotal").innerHTML =( stopped ? "--:--" :  secondsToTomeString(max) );
+
+		
+		
+		
+		
+		//HISTORY    HISTORY     HISTORY     HISTORY    HISTORY\\
+		//   _    _ _____  _____ _______ ____  _______     __  \\
+		//  | |  | |_   _|/ ____|__   __/ __ \|  __ \ \   / /  \\
+		//  | |__| | | | | (___    | | | |  | | |__) \ \_/ /   \\
+		//  |  __  | | |  \___ \   | | | |  | |  _  / \   /    \\
+		//  | |  | |_| |_ ____) |  | | | |__| | | \ \  | |     \\
+		//  |_|  |_|_____|_____/   |_|  \____/|_|  \_\ |_|     \\
+		//                                                     \\
+		//HISTORY    HISTORY     HISTORY     HISTORY    HISTORY\\
 		
 		if (dataArray.message.update.history)
 		{
-			//GET HISTORY
 				//  "album": "Nightcore",
 				//  "artist": "Nightcore ",
 				//  "bpm": 83,
@@ -486,7 +506,21 @@
 			$("historypane").appendChild(historytable);
 			update.history=true;
 		}
-		//COVER ART
+		
+		
+		
+		
+		
+		//COVER ART     COVER ART     COVER ART     COVER ART     COVER ART\\
+		//   _____ ______      ________ _____               _____ _______  \\
+		//  / ____/ __ \ \    / /  ____|  __ \        /\   |  __ \__   __| \\
+		// | |   | |  | \ \  / /| |__  | |__) |      /  \  | |__) | | |    \\
+		// | |   | |  | |\ \/ / |  __| |  _  /      / /\ \ |  _  /  | |    \\
+		// | |___| |__| | \  /  | |____| | \ \     / ____ \| | \ \  | |    \\
+		//  \_____\____/   \/   |______|_|  \_\   /_/    \_\_|  \_\ |_|    \\
+		//                                                                 \\
+		//COVER ART     COVER ART     COVER ART     COVER ART     COVER ART\\
+		
 		if (dataArray.message.update.cover){
 			//alert(dataArray.message.song.cover);
 			if (dataArray.message.song.cover.indexOf("data:image/jpeg;charset=utf-8;base64,")==0)
@@ -499,98 +533,7 @@
 			}
 			$("coverimage").src=src;
 			$("overlayimage").src=src;
-/*
-			var image = {width:0,height:0};
-			var screen = {width:0,height:0};
-			
-			var imageoverlayDisplayStyle= $("imageoverlay").style.display
-			$("imageoverlay").style.display="inline";
-			screen.width = window.getComputedStyle($("imageoverlay")).width;
-			screen.height = window.getComputedStyle($("imageoverlay")).height;
-			screen.width = $("imageoverlay").display=imageoverlayDisplayStyle;
-			var w = window,
-			    d = document,
-			    e = d.documentElement,
-			    g = d.getElementsByTagName('body')[0],
-			    x = w.innerWidth || e.clientWidth || g.clientWidth,
-			    y = w.innerHeight|| e.clientHeight|| g.clientHeight;
-			screen = {width:x,height:y};
 
-			
-			image.width = window.getComputedStyle($("overlayimage")).width;
-			image.height = window.getComputedStyle($("overlayimage")).height;
-			
-			cover.width = window.getComputedStyle($("coverimage")).width;
-			cover.height = window.getComputedStyle($("coverimage")).height;
-			
-			//screen.width = ( screen.width.indexOf("px")==-1 ? screen.width : screen.width.substring(0,screen.width.length - 2 ) ); 
-			//screen.height = ( screen.height.indexOf("px")==-1 ? screen.height : screen.height.substring(0,screen.height.length - 2 ) ); 
-			
-			image.width = ( image.width.indexOf("px")==-1 ? image.width : image.width.substring(0,image.width.length - 2 ) ); 
-			image.height = ( image.height.indexOf("px")==-1 ? image.height : image.height.substring(0,image.height.length - 2 ) ); 
-			
-			var widthRatio = screen.width / image.width;
-			var heightRatio = screen.height / image.height;
-
-			var ratio = widthRatio; //default to the width ratio until proven wrong
-
-			if (widthRatio * image.height > screen.height) {
-				ratio = heightRatio;
-			}
-
-			//now resize the image relative to the ratio
-			image.width = image.width * ratio;
-			image.height = image.height * ratio;
-			*/
-			/*$img.css({
-			    margin: 'auto',
-			    position: 'absolute',
-			    top: 0,
-			    bottom: 0,
-			    left: 0,
-			    right: 0
-			});
-			*/
-			
-			
-			
-		/*//	var ratioA =  cover.width / cover.height;
-		//	var ratioB = cover.height / cover.width;	
-
-		//	//alert(image.width + " > " + screen.width + "\n" + image.height + " > " + screen.height + "\n" + image.width + " / " + image.height + " = " + ratioA );
-
-		//	if(image.width > screen.width)
-		//	{
-		//
-		//		image.width = screen.width;
-		//		image.height = screen.width * ratioA;
-		//	}
-		//	//alert(image.width + " > " + screen.width + "\n" + image.height + " > " + screen.height + "\n" + image.width + " / " + image.height + " = " + ratioA );
-
-		//	if(image.height > screen.height)
-		//	{
-		//		image.height = screen.height;
-		//		image.width = screen.height * ratioB;
-		//	}
-		//	//alert(image.width + " > " + screen.width + "\n" + image.height + " > " + screen.height + "\n" + image.width + " / " + image.height + " = " + ratioA );
-
-		//	//$("overlayimage").style.height = (wndsize().width) + "px";
-		//	//$("overlayimage").style.width = (wndsize().height) + "px";*/
-		//	var w = window,
-		//	    d = document,
-		//	    e = d.documentElement,
-		//	    g = d.getElementsByTagName('body')[0],
-		//	    x = w.innerWidth || e.clientWidth || g.clientWidth,
-		//	    y = w.innerHeight|| e.clientHeight|| g.clientHeight;
-		//	var screen = {width:x,height:y};
-		//	$("overlayimage").style.maxWidth = (screen.width) + "px";
-		//	$("overlayimage").style.maxHeight = (screen.height) + "px";
-			
-		/*//	
-		//	//var image = new PNG(dataArray.message.song.cover);
-		//	//$("cover").style.background="url(" + dataArray.message.song.cover + ") center center no-repeat";
-		//	
-		//	//$("coverimage").reload();*/
 			update.cover=true;	
 		}
 		if (update.song != dataArray.message.song.file)
@@ -605,6 +548,10 @@
 		}
 	}
 
+	
+	
+	
+	
 	function secondsToTomeString(seconds){
 		var dateObj = new Date(seconds*1000);
 		return ( dateObj.getHours()<1 ? dateObj.getHours()+":" : "" ) + ( dateObj.getMinutes()<10 ? "0" : "") + dateObj.getMinutes() + ":" + (dateObj.getSeconds()<10 ? "0" : "") + dateObj.getSeconds() 
@@ -613,6 +560,9 @@
 	function refreshInfos(){
 		ajaxAction("info");
 		timeout = window.setTimeout("refreshInfos()", 1000);
+	}
+	function pitchBPM(pitch){
+		ajaxAction("changebpm&pitch=" + pitch);
 	}
 	var timeout = window.setTimeout("refreshInfos()", 1000);
 	
@@ -703,6 +653,38 @@
 
 	}
 	
+	document.addEventListener('onkeypress', function(e){
+		switch (e) {
+			case 39:
+				//right
+				//next
+				
+				break;
+			case  37:
+				//left
+				//prev
+				
+				break;
+			case 32:
+				//space
+				//pause
+				
+				break;
+			case 13:
+				//enter
+				//cover
+				
+				break;
+			case 27:
+				//esc
+				//leave cover
+				
+				break;
+		}
+			
+	
+	});  
+	
 </script>
 
 
@@ -765,8 +747,10 @@
 					-->
 				</div>
 				<div id="lower_controls">
-					<input type="button" onclick='ajaxAction("fullupdate")' value="(U)pdate	"/>
+					<input type="button" onclick='ajaxAction("fullupdate")' value="Update	"/>
 					<input type="button" onclick='ajaxAction("forcenext")' value="Force Next"/>
+					<div class="meta"    onclick="pitchBPM('180')">180</div>
+					<div class="meta"    onclick="pitchBPM('0')">0</div>
 				</div>
 				<div id="new_controls" class="left">
 					<div id="prev"       onclick='ajaxAction("playlast")'></div>
@@ -777,10 +761,11 @@
 			</div>
 			<div id="stats" class="right" style="display:relative; text-align: right;">
 				<div class="inline right"  style="display:inline-block; text-align: center;">
-					<div id="bpmarrowup" class="arrow-up" style="display:inline-block; position: relative;"></div>
-					<div id="bpm" class="meta" style="text-align: center">---</div>
-					<div style=" position: relative;top: -1em;">BPM</div>
-					<div style="position: relative;top: -0.5em;display:inline-block;"id="bpmarrowdown" class="arrow-down"></div>
+					<div id="bpmarrowup" class="arrow-up" onclick="pitchBPM('+10')" style="display:inline-block; position: relative;bottom: -1.0em; z-index:2"></div>
+					<div id="bpmoffset" class="" style=" position: relative;bottom: -1.0em;">&nbsp;</div>
+					<div id="bpm" class="meta" style="text-align: center" onclick="pitchBPM('0')">---</div>
+					<div style="position: relative;top: -1em;">BPM</div>
+					<div style="position: relative;top: -0.5em;display:inline-block;z-index:2"id="bpmarrowdown" onclick="pitchBPM('-10')" class="arrow-down"></div>
 				</div>
 
 			</div>
