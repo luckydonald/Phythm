@@ -4,9 +4,10 @@ import iotest, time, math #bpm
 import eyed3, moc #id3 and the player
 from mutagen import File #cover artwork
 from PIL import Image #better cover artwork processing.
+import StringIO #better cover artwork processing.
+import module_locator
 import base64 #cover artwork
  # as seen in https://github.com/jonashaag/python-moc   -  DOC at http://moc.lophus.org/
-import module_locator
 
 
 
@@ -23,6 +24,13 @@ class ModHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 msg = "Error! wrong number of args!"
             self.send_response(200)
             self.send_header("Content-type", "text/plain")
+            self.send_header("Content-Length", str(len(msg)))
+            self.end_headers()
+            self.wfile.write(msg)
+        if re.match("/cover.png", self.path):
+            msg = self.bpmServer.cover_data
+            self.send_response(200)
+            self.send_header("Content-type", "image/png")
             self.send_header("Content-Length", str(len(msg)))
             self.end_headers()
             self.wfile.write(msg)
@@ -63,6 +71,7 @@ class BPMServer():
     www_path = module_locator.module_path() + "/www/" #get
     print("Webdir> %s" % www_path)
 
+    cover_data = "";
     last_tick =  time.time(); #hui
     bpmHistory = [160] * settings.conf["average"]
     bpmAverage = 0
@@ -88,11 +97,7 @@ class BPMServer():
                 },
         "history": {
                    },
-        "history_index": 0,
-        "update": {
-                   "history": False,
-                   "cover": False
-                   }  
+        "history_index": 0, 
         }
     
     def run(self):
@@ -122,7 +127,7 @@ class BPMServer():
                 songToPlay = self.getBestMatch(self.bpm + self.bpmShift,self.diff)
                 print("Main> %i New Song: %s" % (self.playing_index, songToPlay[2]))
                 self.playSong(songToPlay[2])
-                self.updatePlayerStatisInfo(True,True)
+                self.updatePlayerStatisInfo()
             
             #print("Run> %s BPM Statistics: Current BPM is %03.2f - Average BPM is %03.2f - Difference is %03.2f" % (self.keep_running, self.bpm,self.bpmAverage, time.time() - self.last_tick))
             time.sleep(1) #important for CPU usage.
@@ -138,16 +143,16 @@ class BPMServer():
     def handleCMD(self, cmd): #DO NOT CALL THIS FROM THIS MAIN THREAD!!!! NEVER!
         #print("HTTP> Handling:" + cmd)
         if cmd.lower() == "info":
-            self.updatePlayerStatisInfo(False,False)
-            return {"status": 0, "message": self.info}
+            self.updatePlayerStatisInfo()
+            return {"status": 2, "info": self.info}
         
         if cmd.lower() == "playlast":
             print(self.played_history)
             self.playing_index +=  -1
             print("CMD> %i Last Old Song: %s" % (self.playing_index, self.played_history[self.playing_index]["path"]))
             self.playSong(self.played_history[self.playing_index]["path"])
-            self.updatePlayerStatisInfo(True, True)
-            return {"status": 0, "message": self.info}
+            self.updatePlayerStatisInfo()
+            return {"status": 102, "info": self.info}
         
         if cmd.lower().startswith('play&id='):
             rg = re.compile('(play&id=)'+'(\\d+)',re.IGNORECASE|re.DOTALL)
@@ -158,9 +163,9 @@ class BPMServer():
                 
                 print("CMD> %i Last Old Song: %s" % (self.playing_index, self.played_history[self.playing_index]["path"]))
                 self.playSong(self.played_history[self.playing_index]["path"])
-                self.updatePlayerStatisInfo(True, True)
-                return {"status": 0, "message": self.info}
-            return {"status": -2, "message": "Error in Regular Expression. Int (\\d+) not found."}
+                self.updatePlayerStatisInfo()
+                return {"status": 102, "info": self.info}
+            return {"status": -102, "error": "Error in Regular Expression. Int (\\d+) not found."}
         
         
         if cmd.lower() == "playnext":
@@ -170,15 +175,15 @@ class BPMServer():
                 songToPlay = self.getBestMatch(self.bpm + self.bpmShift,self.diff) #should add new song AND jump to new song
             print("CMD> %i Next Old Song: %s" % (self.playing_index, self.played_history[self.playing_index]["path"]))
             self.playSong(self.played_history[self.playing_index]["path"])
-            self.updatePlayerStatisInfo(True,True)
-            return {"status": 0, "message": self.info} 
+            self.updatePlayerStatisInfo()
+            return {"status": 102, "info": self.info} 
           
         if cmd.lower() == "forcenext":
             songToPlay = self.getBestMatch(self.bpm + self.bpmShift,self.diff)
             print("CMD> %i New Song: %s" % (self.playing_index, songToPlay[2]))
             self.playSong(songToPlay[2])
-            self.updatePlayerStatisInfo(True,True)
-            return {"status": 0, "message": self.info}
+            self.updatePlayerStatisInfo()
+            return {"status": 0, "info": self.info}
             
         if cmd.lower() == "playpause":
             #songToPlay = self.getBestMatch(self.bpm + self.bpmShift,self.diff)
@@ -187,13 +192,24 @@ class BPMServer():
             else:
                 self.resumeSong()
                 
-            self.updatePlayerStatisInfo(False,False)
+            self.updatePlayerStatisInfo()
             print("CMD> updated self.info")
             print(self.info)
-            return {"status": 0, "message": self.info}
-        if cmd.lower() == "fullupdate":
-            self.updatePlayerStatisInfo(True, True)
-            return {"status": 0, "message": self.info}
+            return {"status": 102, "info": self.info}
+        
+        if cmd.lower() == "fullupdate": #being compatible with older versions, which will never exist longer than 1 time pressing F5...
+            self.updatePlayerStatisInfo()
+            cover_info = self.getCover(moc.info())
+            if cover_info["status"]<0:
+                return cover_info
+            return {"status": 1, "info": self.info, "history": self.played_history, "cover":cover_info["cover"]}
+        
+        if cmd.lower() == "cover":
+            return self.getCover(moc.info())
+        
+        if cmd.lower() == "history":
+            return {"status": 4, "history": self.played_history}#[id,bpm,path]
+        
         if cmd.lower().startswith('changebpm&pitch='):
             rg = re.compile('(changebpm&pitch=)'+'([-+]?)'+'(\\d+)',re.IGNORECASE|re.DOTALL)
             m = rg.search(cmd.lower())
@@ -206,15 +222,15 @@ class BPMServer():
                 if m.group(2)=='+':
                     self.bpmShift += int(m.group(3))
                 self.info["bpmShift"] = self.bpmShift
-                self.updatePlayerStatisInfo(False, False)
+                self.updatePlayerStatisInfo()
                 
-                return {"status": 0, "message": self.info}
-            return {"status": -2, "message": "Error in Regular Expression. Int ([-+]\\d+) not found."}    
+                return {"status": 2, "info": self.info}
+            return {"status": -204, "error": "Error in Regular Expression. Does not Match ([-+]?\\d+) Integer."}    
             
         if cmd.lower() == self.shutdownCommand:
             self.softQuit();
         else:
-            return {"status": -1, "message": "Error: command " + cmd + " not found"}
+            return {"status": -201, "error": "Error: command " + cmd + " not found"}
     
     def getBestMatch(self,bpm,diff): #remember to add bpm pitch to bpm.
         db = sqlite3.connect("music.db") #changed extention
@@ -279,8 +295,7 @@ class BPMServer():
 
         return songInfo
     
-    def getPlayerStatus(self,includeArtwork=False):
-        songInfo = moc.info()
+    def getPlayerStatus(self,songInfo = moc.info()):
         #print("getPlyrStats> moc.info() returns")
         #print(songInfo)
         if songInfo['state']==0:
@@ -300,15 +315,6 @@ class BPMServer():
             bpm = audiofile.tag.bpm
             
             artwork_string = ""
-            if(includeArtwork):
-                try:
-                    file = File(songInfo['file'])
-                    artwork = file.tags['APIC:'].data
-                    #f = open("/music/cover.png", "w")
-                    #f.write(artwork)
-                    artwork_string = "data:image/jpeg;charset=utf-8;base64," + base64.b64encode(artwork)
-                except KeyError:
-                    artwork_string = ""
             parsedInfo = {
                 "title": songInfo['songtitle'],
                 "album": songInfo['album'], 
@@ -322,15 +328,29 @@ class BPMServer():
                 }   
         return parsedInfo
     
-    def updatePlayerStatisInfo(self,includeArtwork=False,includeHistory=False):
-        self.info["song"] = self.getPlayerStatus(includeArtwork)
-        if includeHistory:
-            self.info["history"] = self.played_history #[id,bpm,path]
+    def getCover(self,songInfo=moc.info()):
+        if songInfo['state'] == 0:
+            return {"status": -202, "error": "Nothing Playing."}
+        artwork = ""
+        try:
+            file = File(songInfo['file'])
+            artwork = file.tags['APIC:'].data
+            artwork_string = "data:image/jpeg;charset=utf-8;base64," + base64.b64encode(artwork)
+        except KeyError:
+            with open("www/no-cover.jpg", "rb") as image_file:
+                artwork = image_file.read()
+                encoded_string = base64.b64encode(artwork)
+            self.cover_data = artwork
+            artwork_string = "data:image/jpeg;charset=utf-8;base64," + encoded_string
+            return {"status": -203, "error": "File has no Cover.", "cover":artwork_string }
+        self.cover_data = artwork
+        return {"status": 3, "cover":artwork_string}
+
+    def updatePlayerStatisInfo(self):
+        songInfo = moc.info()
+        self.info["song"] = self.getPlayerStatus(songInfo)
         self.info["history_index"] = self.playing_index
-        self.info["update"] = {
-           "history": includeHistory,
-           "cover": includeArtwork
-        } 
+        self.getCover(songInfo)
         
 
 
@@ -351,29 +371,6 @@ class BPMServer():
         ''' Resize image input image and percent | Keep aspect ratio'''
         w,h = img.size
         return img.resize(((percent*w)/100,(percent*h)/100))
-"""
-def handler(signum, frame):
-    print "Forever is over!"
-    raise Exception("end of time")
-
-def start_server():
-    print("INIT> starting moc server.")
-    try:      
-        moc.start_server()
-    except moc.MocError:
-        print("INIT> moc server already running.") 
-        signal.alarm(0)
-
-signal.signal(signal.SIGALRM, handler)
-signal.alarm(10)
-try:
-    start_server()
-except Exception, exc: 
-    print exc
-
-#handler(None,None)
-signal.alarm(0)
-"""
 
 print("INIT> starting bmp server.")  
 BPMServer().run()
