@@ -64,13 +64,13 @@ class BPMServer():
     bpmHistory = [160] * settings.conf["average"]
     bpmAverage = 0
     bpm = 0
-    bpmPitch = 0  #pitch via Web UI
+    bpmShift = 0  #pitch via Web UI
     keep_running = True
     
     shutdownCommand = "0000" #default, overwritten later.
     info = {
         "bpm": 0,
-        "bpmPitch":+0,
+        "bpmShift":+0,
         "song": {
                 "id": -2,
                 "title": "Songname",
@@ -112,11 +112,11 @@ class BPMServer():
             del self.bpmHistory[0]
             self.bpmHistory.append(self.bpm)
             self.bpmAverage = (sum(self.bpmHistory)/settings.conf["average"]) 
-            self.info["bpm"] = self.bpmAverage + self.bpmPitch
+            self.info["bpm"] = self.bpmAverage + self.bpmShift
             #print (self.autoplaynext_enabled, " | ", self.autoplaynext_endtime, "<",  time.time(), " = ", self.autoplaynext_endtime-time.time())
             if self.autoplaynext_enabled and self.autoplaynext_endtime < time.time():
                 #self.autoplaynext_enabled = False
-                songToPlay = self.getBestMatch(self.bpm + self.bpmPitch,self.diff)
+                songToPlay = self.getBestMatch(self.bpm + self.bpmShift,self.diff)
                 print("Main> %i New Song: %s" % (self.playing_index, songToPlay[2]))
                 self.playSong(songToPlay[2])
                 self.updatePlayerStatisInfo(True,True)
@@ -128,7 +128,7 @@ class BPMServer():
         curr = time.time() #now
         diff = curr - self.last_tick
         self.last_tick = curr
-        self.bpm = ((1.0 / diff) * 60.0 ) + self.bpmPitch
+        self.bpm = ((1.0 / diff) * 60.0 ) + self.bpmShift
              
         #print("Tick! " + str(diff))
         
@@ -164,21 +164,21 @@ class BPMServer():
             print(self.played_history)
             self.playing_index += +1
             if(self.playing_index == len(self.played_history)):
-                songToPlay = self.getBestMatch(self.bpm + self.bpmPitch,self.diff) #should add new song AND jump to new song
+                songToPlay = self.getBestMatch(self.bpm + self.bpmShift,self.diff) #should add new song AND jump to new song
             print("CMD> %i Next Old Song: %s" % (self.playing_index, self.played_history[self.playing_index]["path"]))
             self.playSong(self.played_history[self.playing_index]["path"])
             self.updatePlayerStatisInfo(True,True)
             return {"status": 0, "message": self.info} 
           
         if cmd.lower() == "forcenext":
-            songToPlay = self.getBestMatch(self.bpm + self.bpmPitch,self.diff)
+            songToPlay = self.getBestMatch(self.bpm + self.bpmShift,self.diff)
             print("CMD> %i New Song: %s" % (self.playing_index, songToPlay[2]))
             self.playSong(songToPlay[2])
             self.updatePlayerStatisInfo(True,True)
             return {"status": 0, "message": self.info}
             
         if cmd.lower() == "playpause":
-            #songToPlay = self.getBestMatch(self.bpm + self.bpmPitch,self.diff)
+            #songToPlay = self.getBestMatch(self.bpm + self.bpmShift,self.diff)
             if moc.is_playing():
                 self.pauseSong()
             else:
@@ -197,12 +197,12 @@ class BPMServer():
             if m:
                 print(m.group(0),m.group(1),m.group(2),m.group(3))
                 if m.group(2)=='':
-                    self.bpmPitch = int(m.group(3))
+                    self.bpmShift = int(m.group(3))
                 if m.group(2)=='-':
-                    self.bpmPitch -= int(m.group(3))
+                    self.bpmShift -= int(m.group(3))
                 if m.group(2)=='+':
-                    self.bpmPitch += int(m.group(3))
-                self.info["bpmPitch"] = self.bpmPitch
+                    self.bpmShift += int(m.group(3))
+                self.info["bpmShift"] = self.bpmShift
                 self.updatePlayerStatisInfo(False, False)
                 
                 return {"status": 0, "message": self.info}

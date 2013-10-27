@@ -388,7 +388,7 @@
 		
 		$("bpm").innerHTML=Math.round(dataArray.message.bpm);
 		$("bpmoffset").innerHTML = 
-		(dataArray.message.bpmPitch==0  ?  "&nbsp;" : (dataArray.message.bpmPitch<0 ? "" : "+" ) + dataArray.message.bpmPitch + "BPM");
+		(dataArray.message.bpmShift==0  ?  "&nbsp;" : (dataArray.message.bpmShift<0 ? "" : "+" ) + dataArray.message.bpmShift + "BPM");
 
 		if(notplaying)
 		{
