@@ -3,8 +3,9 @@ import json, random, re, sqlite3, settings, string, socket, SimpleHTTPServer, So
 import iotest, time, math #bpm
 import eyed3, moc #id3 and the player
 from mutagen import File #cover artwork
-from PIL import Image #better cover artwork processing.
-import StringIO #better cover artwork processing.
+#from PIL import Image #better cover artwork processing.
+import io #better cover artwork processing.
+from StringIO import StringIO
 import module_locator
 import base64 #cover artwork
  # as seen in https://github.com/jonashaag/python-moc   -  DOC at http://moc.lophus.org/
@@ -27,6 +28,7 @@ class ModHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             self.send_header("Content-Length", str(len(msg)))
             self.end_headers()
             self.wfile.write(msg)
+            return
         if re.match(r"(.*?)/(cover.png)", self.path):
             msg = self.bpmServer.cover_data
             self.send_response(200)
@@ -34,12 +36,14 @@ class ModHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             self.send_header("Content-Length", str(len(msg)))
             self.end_headers()
             self.wfile.write(msg)
+            return
         else:
             self.path = "/www" + self.path
             f = self.send_head()
             if f:
                 self.copyfile(f, self.wfile)
                 f.close()
+                
 
 class HTTPserver(threading.Thread):
     
@@ -72,13 +76,15 @@ class BPMServer():
     print("Webdir> %s" % www_path)
 
     cover_data = "";
+    #cover_small = "";
     last_tick =  time.time(); #hui
+    last_file =  ""
     bpmHistory = [160] * settings.conf["average"]
     bpmAverage = 0
     bpm = 0
     bpmShift = 0  #pitch via Web UI
     keep_running = True
-    
+    debug = False
     shutdownCommand = "0000" #default, overwritten later.
     info = {
         "bpm": 0,
@@ -241,13 +247,15 @@ class BPMServer():
                             # (index, bpm, file)  #index starts at 1!
                             # (1, -1, u'/music/SUBFOLDER/(I Want to Wear) Yellow & Blue - TalkAcanthi - Rocking is Magic.mp3')
             song
-            print("Match> Song is %s" % song[2])
+            if self.debug:
+                print("Match> Song is %s" % song[2])
             was_played = False
             for i in self.played_history:
                 if song[0] == i["id"]:
                     was_played = True
             if was_played:
-                print("Match> Already played, skipping.")
+                if self.debug:
+                    print("Match> Already played, skipping.")
                 continue
             audiofile = eyed3.load(song[2]) #path
             bpm = audiofile.tag.bpm
@@ -338,12 +346,24 @@ class BPMServer():
             artwork = file.tags['APIC:'].data
             artwork_string = "data:image/jpeg;charset=utf-8;base64," + base64.b64encode(artwork)
         except KeyError:
-            with open("www/no-cover.jpg", "rb") as image_file:
+            with open("www/no-cover.jpg", "rb") as image_file:  #todo: add to config
                 artwork = image_file.read()
-                encoded_string = base64.b64encode(artwork)
+                encoded_string ="data:image/jpeg;charset=utf-8;base64," + base64.b64encode(artwork)
+                print("loading no-cover.jpg as cover")
+            print(encoded_string)
+            #self.cover_data = artwork
+            #stream = io.BytesIO(artwork)
+            #im = Image.open(stream)
+            #im = ImageOps.fit(im, (500,100), Image.ANTIALIAS)
+            #output = StringIO()
+            #im.save(output, "PNG")
+            #contents = output.getvalue()
             self.cover_data = artwork
             artwork_string = "data:image/jpeg;charset=utf-8;base64," + encoded_string
             return {"status": -203, "error": "File has no Cover.", "cover":artwork_string }
+        print("loading atwork cover as cover")
+
+        #self.cover_small = contents
         self.cover_data = artwork
         return {"status": 3, "cover":artwork_string}
 
@@ -351,7 +371,9 @@ class BPMServer():
         songInfo = moc.info()
         self.info["song"] = self.getPlayerStatus(songInfo)
         self.info["history_index"] = self.playing_index
-        self.getCover(songInfo)
+        if (songInfo["file"] != self.last_file): #changed?
+            self.getCover(songInfo)
+            self.last_file = songInfo["file"]
         
 
 

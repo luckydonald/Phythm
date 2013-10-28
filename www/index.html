@@ -399,63 +399,20 @@
 	<body>
 	<script type="text/javascript">
 	
-	function printStackTrace() {
-	  var callstack = [];
-	  var isCallstackPopulated = false;
-	  try {
-	    i.dont.exist+=0; //doesn't exist- that's the point
-	  } catch(e) {
-	    if (e.stack) { //Firefox
-	      var lines = e.stack.split('\n');
-	      for (var i=0, len=lines.length; i<len; i++) {
-		if (lines[i].match(/^\s*[A-Za-z0-9\-_\$]+\(/)) {
-		  callstack.push(lines[i]);
-		}
-	      }
-	      //Remove call to printStackTrace()
-	      callstack.shift();
-	      isCallstackPopulated = true;
-	    }
-	    else if (window.opera && e.message) { //Opera
-	      var lines = e.message.split('\n');
-	      for (var i=0, len=lines.length; i<len; i++) {
-		if (lines[i].match(/^\s*[A-Za-z0-9\-_\$]+\(/)) {
-		  var entry = lines[i];
-		  //Append next line also since it has the file info
-		  if (lines[i+1]) {
-		    entry += ' at ' + lines[i+1];
-		    i++;
-		  }
-		  callstack.push(entry);
-		}
-	      }
-	      //Remove call to printStackTrace()
-	      callstack.shift();
-	      isCallstackPopulated = true;
-	    }
-	  }
-	  if (!isCallstackPopulated) { //IE and Safari
-	    var currentFunction = arguments.callee.caller;
-	    while (currentFunction) {
-	      var fn = currentFunction.toString();
-	      var fname = fn.substring(fn.indexOf("function") + 8, fn.indexOf('')) || 'anonymous';
-	      callstack.push(fname);
-	      currentFunction = currentFunction.caller;
-	    }
-	  }
-	  output(callstack);
-	}
 	
-	function output(arr) {
-	  //Optput however you want
-	  alert(arr.join('\n\n'));
-	}
 
-	//Taken from http://www.eriwen.com/javascript/js-stack-trace/
-	
-	
-	
-	
+	window.onload = function() {
+		var outside = $("songprogressouter");
+		var inside = $("songprogress");
+		outside.addEventListener('click', function(e) {
+			var rect = inside.getBoundingClientRect();
+			//inside.style.width = (e.layerX-rect.left) + "px";
+			// calculate the %
+			var pct = Math.floor(((e.layerX-rect.left) / outside.offsetWidth) * 100) +5;
+			calcBar(pct);
+
+		}, false);
+	};
 	
 	
 	
@@ -527,14 +484,23 @@
 		}
 	}
 	var globalDataArray;
-	
+
+	var refreshTimeout;
+
 	//mygetrequest.open("GET", "/cmd.json?info", true)	
 	//mygetrequest.send(null)
+	
+	
+	/* FUNCTIONS BLOCK START */
 	
 	function $(id){
 		return document.getElementById(id);
 	}
-	var refreshTimeout;
+	
+	function endsWith(str, suffix) {
+		return str.indexOf(suffix, str.length - suffix.length) !== -1;
+	}
+	
 	
 	
 	function ajaxAction(actioncommand){
@@ -604,11 +570,11 @@
 		var curr = dataArray.info.song.currentsec;
 		var progress = ((100/max)*curr);	
 		//alert("( 100 / "+ max + " ) * " + curr + " = " + progress);
+		
 		var progressbar = $("songprogress");
+		/*
 		progresspx = Math.round(progress*3); //factor x3
 		progress = Math.round(progress);
-	
-		
 		var remaining = progresspx-(100*3)+20; //factor x3
 		remaining = (remaining > 0 && remaining != Number.NaN ? remaining : 0);
 		styleStr = "20px " + remaining + "px " + remaining + "px 20px";
@@ -616,6 +582,8 @@
 		
 		progressbar.style.borderRadius=styleStr;
 		progressbar.style.width=(stopped ? 0 : progresspx) + "px";
+		*/
+		calcBar(stopped ? 0 : progress);
 		
 		progressbar.innerHTML=( stopped ? "--:--" : secondsToTomeString(curr));
 		$("songtotal").innerHTML =( stopped ? "--:--" :  secondsToTomeString(max) );
@@ -796,6 +764,36 @@
 		dezoomImage();
 		hideError();
 	}
+	function calcBar(percent){
+		var progressbar = $("songprogress");
+		finalwidth = window.getComputedStyle($("songprogressouter")).width;
+		
+		//Non-Regex
+		if (endsWith(finalwidth, "px")){
+			finalwidth = parseFloat(finalwidth.substring(0, finalwidth.length - 2));
+		}
+		//Regex, not working.
+		/*
+		var re = /px$/;
+		finalwidth.replace(re, "");
+		*/
+		//End
+		
+		progresspx = Math.round(percent*(finalwidth/100)); //not always factor x3
+		maxpx = Math.round((finalwidth));
+		console.log("percent = " + percent + " \nfinalwidth = " +  finalwidth + " \n(percent*(finalwidth/100))\nprogresspx = " + progresspx);
+
+		progress = Math.round(percent);
+		var remaining = progresspx-(100*(finalwidth/100))+20; //not always factor x3
+		remaining = (remaining > 0 && remaining != Number.NaN ? remaining : 0);
+		styleStr = "20px " + remaining + "px " + remaining + "px 20px";
+		progresspx = (progresspx < 10 ? 10 : progresspx);
+		progressbar.style.borderRadius=styleStr;
+		progressbar.style.width=progresspx + "px";
+		progressbar.innerHTML = percent + "%";
+
+	
+	}
 	
 	function calcBpmDiff(realbpm, songbpm){
 		if(songbpm == 0){
@@ -868,7 +866,7 @@
 		window.addEventListener('orientationchange', calculateImgSize);
 
 	}
-	
+	window.onresize=calculateImgSize;
 	document.onkeypress = (function(e){
 		switch (e.keyCode) {
 			case 39:
@@ -896,7 +894,8 @@
 				//leave cover
 				hideAll();
 				break;
-		};	
+		};
+
 	});  
 	
 	document.addEventListener('onkeypress',document.onkeypress);   //what a trick
@@ -946,7 +945,7 @@
 		<div id="progressbar" class="segment blockleft">
 			<div id="songtotal" class="right meta" style="">--:--</div>
 
-			<div class="progressbar-outer" style="overflow: hidden">
+			<div id="songprogressouter" class="progressbar-outer" style="overflow: hidden">
 				<div class="progressbar-inner left" id="songprogress">--:--</div>
 			</div>
 
