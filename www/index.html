@@ -398,76 +398,183 @@
 	</head>
 	<body>
 	<script type="text/javascript">
+	
+	function printStackTrace() {
+	  var callstack = [];
+	  var isCallstackPopulated = false;
+	  try {
+	    i.dont.exist+=0; //doesn't exist- that's the point
+	  } catch(e) {
+	    if (e.stack) { //Firefox
+	      var lines = e.stack.split('\n');
+	      for (var i=0, len=lines.length; i<len; i++) {
+		if (lines[i].match(/^\s*[A-Za-z0-9\-_\$]+\(/)) {
+		  callstack.push(lines[i]);
+		}
+	      }
+	      //Remove call to printStackTrace()
+	      callstack.shift();
+	      isCallstackPopulated = true;
+	    }
+	    else if (window.opera && e.message) { //Opera
+	      var lines = e.message.split('\n');
+	      for (var i=0, len=lines.length; i<len; i++) {
+		if (lines[i].match(/^\s*[A-Za-z0-9\-_\$]+\(/)) {
+		  var entry = lines[i];
+		  //Append next line also since it has the file info
+		  if (lines[i+1]) {
+		    entry += ' at ' + lines[i+1];
+		    i++;
+		  }
+		  callstack.push(entry);
+		}
+	      }
+	      //Remove call to printStackTrace()
+	      callstack.shift();
+	      isCallstackPopulated = true;
+	    }
+	  }
+	  if (!isCallstackPopulated) { //IE and Safari
+	    var currentFunction = arguments.callee.caller;
+	    while (currentFunction) {
+	      var fn = currentFunction.toString();
+	      var fname = fn.substring(fn.indexOf("function") + 8, fn.indexOf('')) || 'anonymous';
+	      callstack.push(fname);
+	      currentFunction = currentFunction.caller;
+	    }
+	  }
+	  output(callstack);
+	}
+	
+	function output(arr) {
+	  //Optput however you want
+	  alert(arr.join('\n\n'));
+	}
+
+	//Taken from http://www.eriwen.com/javascript/js-stack-trace/
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	var update = {
 		song:"",
 		cover: false,
 		history: false
 	}
 	var commands = {
-		play: "",
-		pause: "playpause",
-		next: "playnext",
-		last: "playlast",
-		forceNext: "forcenext",
-		fullUpdate: "fullupdate"
+		play: {command:"", data:true},
+		pause: {command:"playpause", data:true},
+		next: {command:"playnext", data:true},
+		last: {command:"playlast", data:true},
+		info: {command:"info", data:true},
+		forceNext: {command:"forcenext", data:true},
+		fullUpdate: {command:"fullupdate", data:true},
+		template: {command:"", data:false},
+		cover: {command:"cover", data:false},
+		history: {command:"history", data:false}
 	}
 	
 	function ajaxRequest(){
-	 var activexmodes=["Msxml2.XMLHTTP", "Microsoft.XMLHTTP"] //activeX versions to check for in IE
-	 if (window.ActiveXObject){ //Test for support for ActiveXObject in IE first (as XMLHttpRequest in IE7 is broken)
-	  for (var i=0; i<activexmodes.length; i++){
-	   try{
-	    return new ActiveXObject(activexmodes[i])
-	   }
-	   catch(e){
-	    //suppress error
-	   }
-	  }
-	 }
-	 else if (window.XMLHttpRequest) // if Mozilla, Safari etc
-	  return new XMLHttpRequest()
-	 else
-	  return false
+		var activexmodes=["Msxml2.XMLHTTP", "Microsoft.XMLHTTP"] //activeX versions to check for in IE
+		if (window.ActiveXObject){ //Test for support for ActiveXObject in IE first (as XMLHttpRequest in IE7 is broken)
+			for (var i=0; i<activexmodes.length; i++){
+				try{
+					return new ActiveXObject(activexmodes[i])
+				}
+				catch(e){
+					//suppress error
+				}
+			}
+		}
+		else if (window.XMLHttpRequest) // if Mozilla, Safari etc
+			return new XMLHttpRequest()
+		else
+			return false;
 	}
 	
 	var mygetrequest=new ajaxRequest()
 	mygetrequest.onreadystatechange=function(){
-	 if (mygetrequest.readyState==4){
-	  if (mygetrequest.status==200 ){ //|| window.location.href.indexOf("http")==-1
-	 //var jsondata=eval("("+mygetrequest.responseText+")") //retrieve result as an JavaScript object
-	   var jsondata = JSON.parse(mygetrequest.responseText);
-	   applyInfos(jsondata);
-	
-	  }
-	  else{
-	   //alert("An error has occured making the request")
-	  }
-	 }
+		if (mygetrequest.readyState==4){
+			if (mygetrequest.status==200 ){ //|| window.location.href.indexOf("http")==-1
+				//var jsondata=eval("("+mygetrequest.responseText+")") //retrieve result as an JavaScript object
+				var jsondata = JSON.parse(mygetrequest.responseText);
+				this.json = jsondata;
+				applyResult(this);				
+			}else{
+				//alert("An error has occured making the request")
+			}
+		}
 	}
 	var globalDataArray;
+	
 	//mygetrequest.open("GET", "/cmd.json?info", true)	
 	//mygetrequest.send(null)
+	
 	function $(id){
 		return document.getElementById(id);
 	}
 	var refreshTimeout;
 	
-	function ajaxAction(action){
-		mygetrequest.open("GET", "/cmd.json?"+action, true);
+	
+	function ajaxAction(actioncommand){
+		mygetrequest.actioncommand = actioncommand;
+		mygetrequest.open("GET", "/cmd.json?"+actioncommand.command, true);
 		mygetrequest.send(null);
-		//dataArray = mygetrequest.dataArray;
-			
+		return mygetrequest.dataArray;
 		//refreshTimeout=window.Timeout(ajaxRefresh, 1000);
 	}
+	
+	function applyAction(actioncommand){
+		ajaxData = ajaxAction(actioncommand);
+		//alert(actioncommand.command + " - " + ajaxData);
+	}
+	function applyResult(mygetrequest){
+		actioncommand = mygetrequest.actioncommand;
+		ajaxData = mygetrequest.json;
+		//alert(ajaxData.history[0].);
+		if(actioncommand.data){
+			applyInfos(ajaxData);
+		}
+		else if (actioncommand == commands.history)
+		{
+			getHistory(ajaxData);
+		}
+	}
 	function applyInfos(dataArray){
-		notplaying = dataArray.message.song.playingstate != 2;
-		stopped = dataArray.message.song.playingstate == 0;
-		var infostring =  (notplaying ? "Not Playing." : "Playing '" + dataArray.message.song.title + "' by " + dataArray.message.song.artist );
+		if (dataArray == undefined){
+			console.trace();
+			printStackTrace();
+
+		}
+		notplaying = dataArray.info.song.playingstate != 2;
+		stopped = dataArray.info.song.playingstate == 0;
+		var infostring =  (notplaying ? "Not Playing." : "Playing '" + dataArray.info.song.title + "' by " + dataArray.info.song.artist );
 		document.title = infostring;
 		
-		$("bpm").innerHTML=Math.round(dataArray.message.bpm);
-		$("bpmShift").innerHTML = dataArray.message.bpmShift + " BPM";
-			//(dataArray.message.bpmShift==0  ?  "&nbsp;" : (dataArray.message.bpmShift<0 ? "" : "+" ) + dataArray.message.bpmShift + "BPM");
+		$("bpm").innerHTML=Math.round(dataArray.info.bpm);
+		$("bpmShift").innerHTML = dataArray.info.bpmShift + " BPM";
+			//(dataArray.info.bpmShift==0  ?  "&nbsp;" : (dataArray.info.bpmShift<0 ? "" : "+" ) + dataArray.info.bpmShift + "BPM");
 
 		if(notplaying)
 		{
@@ -487,14 +594,14 @@
 			$("songnotplayingtext").style.display="none";
 			$("songmeta").style.display="block";	
 		}
-		$("songtitle").innerHTML = ( stopped ? "" : (dataArray.message.song.title == "" ? "&nbsp;&nbsp;-&nbsp;&nbsp;" : dataArray.message.song.title));
-		$("songalbum").innerHTML = ( stopped ? "" : (dataArray.message.song.album == "" ? "&nbsp;&nbsp;-&nbsp;&nbsp;" : dataArray.message.song.album));	
-		$("songartist").innerHTML = ( stopped ? "" : (dataArray.message.song.artist == "" ? "&nbsp;&nbsp;-&nbsp;&nbsp;" : dataArray.message.song.artist));
-		$("songbpm").innerHTML = ( stopped ? "0" : (dataArray.message.song.title == "" ? "&nbsp;&nbsp;-&nbsp;&nbsp;" : dataArray.message.song.bpm));
-		calcBpmDiff(Math.round(dataArray.message.bpm),(stopped ? 0 : dataArray.message.song.bpm));
+		$("songtitle").innerHTML = ( stopped ? "" : (dataArray.info.song.title == "" ? "&nbsp;&nbsp;-&nbsp;&nbsp;" : dataArray.info.song.title));
+		$("songalbum").innerHTML = ( stopped ? "" : (dataArray.info.song.album == "" ? "&nbsp;&nbsp;-&nbsp;&nbsp;" : dataArray.info.song.album));	
+		$("songartist").innerHTML = ( stopped ? "" : (dataArray.info.song.artist == "" ? "&nbsp;&nbsp;-&nbsp;&nbsp;" : dataArray.info.song.artist));
+		$("songbpm").innerHTML = ( stopped ? "0" : (dataArray.info.song.title == "" ? "&nbsp;&nbsp;-&nbsp;&nbsp;" : dataArray.info.song.bpm));
+		calcBpmDiff(Math.round(dataArray.info.bpm),(stopped ? 0 : dataArray.info.song.bpm));
 		
-		var max = dataArray.message.song.totalsec;
-		var curr = dataArray.message.song.currentsec;
+		var max = dataArray.info.song.totalsec;
+		var curr = dataArray.info.song.currentsec;
 		var progress = ((100/max)*curr);	
 		//alert("( 100 / "+ max + " ) * " + curr + " = " + progress);
 		var progressbar = $("songprogress");
@@ -512,11 +619,69 @@
 		
 		progressbar.innerHTML=( stopped ? "--:--" : secondsToTomeString(curr));
 		$("songtotal").innerHTML =( stopped ? "--:--" :  secondsToTomeString(max) );
+		
+		
+		
+		if (update.song != dataArray.info.song.file)
+		{
+			update.cover = false;
+			update.history = false;
+			update.song = dataArray.info.song.file;
+
+		}
+
+		if (update.cover != true){
+			console.log(!update.cover);
+			getCover();
+		}
+		if (!update.history){
+			applyAction(commands.history);
+		}
+
 
 		
 		
 		
 		
+		
+		
+	
+	}
+	function getCover(){
+		/*
+		//COVER ART     COVER ART     COVER ART     COVER ART     COVER ART\\
+		//   _____ ______      ________ _____               _____ _______  \\
+		//  / ____/ __ \ \    / /  ____|  __ \        /\   |  __ \__   __| \\
+		// | |   | |  | \ \  / /| |__  | |__) |      /  \  | |__) | | |    \\
+		// | |   | |  | |\ \/ / |  __| |  _  /      / /\ \ |  _  /  | |    \\
+		// | |___| |__| | \  /  | |____| | \ \     / ____ \| | \ \  | |    \\
+		//  \_____\____/   \/   |______|_|  \_\   /_/    \_\_|  \_\ |_|    \\
+		//                                                                 \\
+		//COVER ART     COVER ART     COVER ART     COVER ART     COVER ART\\
+		*/
+		
+		src = new Date().getTime()+"/cover.png";
+		/*if (typeof dataArray.cover != 'undefined'){
+			alert(dataArray.cover);
+			if (dataArray.cover.indexOf("data:image/jpeg;charset=utf-8;base64,")==0)
+			{
+				src = dataArray.cover;
+			}
+			else
+			{
+				src = "no-cover.jpg";
+			}					
+		}*/
+		$("coverimage").src=src;
+		$("overlayimage").src=src;
+		console.log("New URL: "+ src);
+		update.cover = true;
+	}
+
+	
+	
+	function getHistory(dataArray){
+		/*
 		//HISTORY    HISTORY     HISTORY     HISTORY    HISTORY\\
 		//   _    _ _____  _____ _______ ____  _______     __  \\
 		//  | |  | |_   _|/ ____|__   __/ __ \|  __ \ \   / /  \\
@@ -526,8 +691,9 @@
 		//  |_|  |_|_____|_____/   |_|  \____/|_|  \_\ |_|     \\
 		//                                                     \\
 		//HISTORY    HISTORY     HISTORY     HISTORY    HISTORY\\
+		*/
 		
-		if (dataArray.message.update.history)
+		if (!update.history && typeof dataArray.history != 'undefined')
 		{
 				//  "album": "Nightcore",
 				//  "artist": "Nightcore ",
@@ -537,21 +703,20 @@
 				//  "playingstate": 1,
 				//  "title": "Nightcore - Bad",
 				//  "totalsec": "173
-			$("historypane").innerHTML = "";
 			
 	
 			var historytable = document.createElement('table');
 			historytable.setAttribute('class', 'historytable clear full');
 			//historyelement.setAttribute('class', 'groupdiv');
 			
-			for (var i = 0; i < dataArray.message.history.length; i++) {
-				var element = dataArray.message.history[i];
+			for (var i = 0; i < dataArray.history.length; i++) {
+				var element = dataArray.history[i];
 				// Do something with element i.
 				var tr = document.createElement('tr');
-				tr.setAttribute('class', (i%2==0?"even":"odd") + (dataArray.message.history_index == i?" current":""));
+				tr.setAttribute('class', (i%2==0?"even":"odd") + (dataArray.history_index == i?" current":""));
 				tr.setAttribute('songid', i);
-				tr.setAttribute('id', "tr_"+(dataArray.message.history.length-i-1));
-				tr.setAttribute('onclick', 'ajaxAction("play&id="+this.getAttribute("songid"))');
+				tr.setAttribute('id', "tr_"+(dataArray.history.length-i-1));
+				tr.setAttribute('onclick', "applyAction({command:'play&id=" + i + "', data:true})");
 	
 				historytable.insertBefore(tr,historytable.childNodes[0]); //Insert as first Element
 	
@@ -582,54 +747,13 @@
 				historybpm.innerHTML = element.bpm;
 				tr.appendChild(historybpm);
 			}
+			$("historypane").innerHTML = "";
 			$("historypane").appendChild(historytable);
 			update.history=true;
 		}
-		
-		
-		
-		
-		
-		//COVER ART     COVER ART     COVER ART     COVER ART     COVER ART\\
-		//   _____ ______      ________ _____               _____ _______  \\
-		//  / ____/ __ \ \    / /  ____|  __ \        /\   |  __ \__   __| \\
-		// | |   | |  | \ \  / /| |__  | |__) |      /  \  | |__) | | |    \\
-		// | |   | |  | |\ \/ / |  __| |  _  /      / /\ \ |  _  /  | |    \\
-		// | |___| |__| | \  /  | |____| | \ \     / ____ \| | \ \  | |    \\
-		//  \_____\____/   \/   |______|_|  \_\   /_/    \_\_|  \_\ |_|    \\
-		//                                                                 \\
-		//COVER ART     COVER ART     COVER ART     COVER ART     COVER ART\\
-		
-		if (dataArray.message.update.cover){
-			//alert(dataArray.message.song.cover);
-			if (dataArray.message.song.cover.indexOf("data:image/jpeg;charset=utf-8;base64,")==0)
-			{
-				src = dataArray.message.song.cover
-			}
-			else
-			{
-				src = "no-cover.jpg"
-			}
-			$("coverimage").src=src;
-			$("overlayimage").src=src;
-
-			update.cover=true;	
-		}
-		if (update.song != dataArray.message.song.file)
-		{
-			ajaxAction("fullupdate");
-		}
-		if (update.cover == true && update.history == true)
-		{
-			update.song = dataArray.message.song.file;
-			update.cover == false;
-			update.history == false;
-		}
+	
+	
 	}
-
-	
-	
-	
 	
 	function secondsToTomeString(seconds){
 		var dateObj = new Date(seconds*1000);
@@ -637,11 +761,11 @@
 	}
 	
 	function refreshInfos(){
-		ajaxAction("info");
+		applyAction(commands.info);
 		timeout = window.setTimeout("refreshInfos()", 1000);
 	}
 	function pitchBPM(pitch){
-		ajaxAction("changebpm&pitch=" + pitch);
+		applyAction({command:"changebpm&pitch=" + pitch, data:true});
 	}
 	var timeout = window.setTimeout("refreshInfos()", 1000);
 	
@@ -750,17 +874,17 @@
 			case 39:
 				//right
 				//next
-				ajaxAction(commands.next);
+				applyAction(commands.next);
 				break;
 			case  37:
 				//left
 				//prev
-				ajaxAction(commands.last);
+				applyAction(commands.last);
 				break;
 			case 32:
 				//space
 				//pause
-				ajaxAction(commands.pause);
+				applyAction(commands.pause);
 				break;
 			case 13:
 				//enter
@@ -778,8 +902,6 @@
 	document.addEventListener('onkeypress',document.onkeypress);   //what a trick
 
 </script>
-
-
 
 
 
@@ -837,17 +959,18 @@
 				
 			</div>
 			<div id="lower_controls">
-				<div class="meta clear"    onclick="ajaxAction(commands.fullUpdate)">Update</div>
-				<div class="meta clear"    onclick="ajaxAction(commands.forceNext)">Force Next</div>
+				<div class="meta clear"    onclick="applyAction(commands.fullUpdate)">Update</div>
+				<div class="meta clear"    onclick="applyAction(commands.forceNext)">Force Next</div>
 				<div class="meta clear"    onclick="pitchBPM('180')">Shift with 180 BPM</div>
 				<div class="meta clear"    onclick="pitchBPM('0')">Shift with 0 BPM</div>
+				<div class="meta clear"    onclick="getCover()">Get Cover</div>
 				<div class="meta clear"    onclick="showError('new ExampleError.throw()')">Example Error</div>
 			</div>
 			<div id="new_controls" class="left">
-				<div id="prev"       onclick='ajaxAction(commands.last)'></div>
-				<div id="play"      onclick='ajaxAction(commands.forceNext)'></div>
-				<div id="playpause" onclick='ajaxAction(commands.pause)'></div>
-				<div id="next"       onclick='ajaxAction(commands.next)'></div>
+				<div id="prev"       onclick='applyAction(commands.last)'></div>
+				<div id="play"      onclick='applyAction(commands.forceNext)'></div>
+				<div id="playpause" onclick='applyAction(commands.pause)'></div>
+				<div id="next"       onclick='applyAction(commands.next)'></div>
 			</div>
 			
 			<div id="stats" class="right" style="display:relative; text-align: right;">

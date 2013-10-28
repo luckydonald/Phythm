@@ -22,12 +22,12 @@ class ModHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 msg = json.dumps(self.bpmServer.handleCMD(parts[1]), sort_keys=True, indent=4, separators=(',', ': '))
             else: 
                 msg = "Error! wrong number of args!"
-            self.send_response(200)
+            self.send_response(200) 
             self.send_header("Content-type", "text/plain")
             self.send_header("Content-Length", str(len(msg)))
             self.end_headers()
             self.wfile.write(msg)
-        if re.match("/cover.png", self.path):
+        if re.match(r"(.*?)/(cover.png)", self.path):
             msg = self.bpmServer.cover_data
             self.send_response(200)
             self.send_header("Content-type", "image/png")
@@ -97,8 +97,9 @@ class BPMServer():
                 },
         "history": {
                    },
-        "history_index": 0, 
+        "history_index": 0
         }
+
     
     def run(self):
         
@@ -202,13 +203,13 @@ class BPMServer():
             cover_info = self.getCover(moc.info())
             if cover_info["status"]<0:
                 return cover_info
-            return {"status": 1, "info": self.info, "history": self.played_history, "cover":cover_info["cover"]}
+            return {"status": 1, "info": self.info, "history": self.played_history, "history_index":self.playing_index, "cover":cover_info["cover"]}
         
         if cmd.lower() == "cover":
             return self.getCover(moc.info())
         
         if cmd.lower() == "history":
-            return {"status": 4, "history": self.played_history}#[id,bpm,path]
+            return {"status": 4, "history": self.played_history, "history_index":self.playing_index}#[id,bpm,path]
         
         if cmd.lower().startswith('changebpm&pitch='):
             rg = re.compile('(changebpm&pitch=)'+'([-+]?)'+'(\\d+)',re.IGNORECASE|re.DOTALL)
