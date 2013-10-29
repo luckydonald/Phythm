@@ -133,7 +133,7 @@ class BPMServer():
                 #self.autoplaynext_enabled = False
                 songToPlay = self.getBestMatch(self.bpm + self.bpmShift,self.diff)
                 print("Main> %i New Song: %s" % (self.playing_index, songToPlay[2]))
-                self.playSong(songToPlay[2])
+                self.playSong(songToPlay[2])  
                 self.updatePlayerStatisInfo()
             
             #print("Run> %s BPM Statistics: Current BPM is %03.2f - Average BPM is %03.2f - Difference is %03.2f" % (self.keep_running, self.bpm,self.bpmAverage, time.time() - self.last_tick))
@@ -233,6 +233,22 @@ class BPMServer():
                 
                 return {"status": 2, "info": self.info}
             return {"status": -204, "error": "Error in Regular Expression. Does not Match ([-+]?\\d+) Integer."}    
+        if cmd.lower().startswith('seek&percentage='):
+            rg = re.compile('(seek&percentage=)'+'([+-]?\\d*\\.\\d+)(?![-+0-9\\.])',re.IGNORECASE|re.DOTALL)
+            m = rg.search(cmd.lower())
+            if m:
+                percentage = float(m.group(2))    
+                self.seek(percentage)
+                self.updatePlayerStatisInfo()
+                return {"status": 5, "info": self.info}
+            rg = re.compile('(seek&percentage=)'+'(\\d+)',re.IGNORECASE|re.DOTALL)
+            m = rg.search(cmd.lower())
+            if m:
+                percentage = float(m.group(2))    
+                self.seek(percentage)
+                self.updatePlayerStatisInfo()
+                return {"status": 5, "info": self.info}
+            return {"status": -205, "error": "Error in Regular Expression. Does not Match ([+-]?\\d*\\.\\d+)(?![-+0-9\\.]) Float."}    
             
         if cmd.lower() == self.shutdownCommand:
             self.softQuit();
@@ -371,12 +387,22 @@ class BPMServer():
         songInfo = moc.info()
         self.info["song"] = self.getPlayerStatus(songInfo)
         self.info["history_index"] = self.playing_index
-        if (songInfo["file"] != self.last_file): #changed?
-            self.getCover(songInfo)
-            self.last_file = songInfo["file"]
+        try:
+            if (songInfo["file"] != self.last_file): #changed?
+                self.getCover(songInfo)
+                self.last_file = songInfo["file"]
+        except KeyError:
+                if self.debug:
+                    print("updatePlayerStatisInfo> No File Playing.")
         
-
-
+    def seek(self,percentage):
+        songInfo = moc.info();
+        percentage_multiplicator = float(float(songInfo["totalsec"])/100) #float(songInfo["currentsec"])
+        print("SEEK> New Jackpot Multiplicator: %f" % percentage_multiplicator)
+        time_to_seek_to = round(percentage * percentage_multiplicator)
+        time_to_seek_with = int(time_to_seek_to - int(float(songInfo["currentsec"])) )
+        print("SEEK> from %s (of %s) time to seek to %f, with %f that's %i (+%i) seconds" % (songInfo["currentsec"], songInfo["totalsec"],percentage, percentage_multiplicator, time_to_seek_to, time_to_seek_with))
+        moc.seek(time_to_seek_with)
     def softQuit(self):
         print("=== Shutting down ===")
         try:
@@ -386,6 +412,7 @@ class BPMServer():
         except MocNotRunning:
             print("DOWN> already stopped moc server.")  
         keep_running = False
+        
         print("=== Shutting down ===")
 
         #TODO: insert boolean 'running' in while true, so it is nice and neat.
@@ -393,8 +420,10 @@ class BPMServer():
     def resize(img,percent):
         ''' Resize image input image and percent | Keep aspect ratio'''
         w,h = img.size
+        1/0; #because function should not be called
         return img.resize(((percent*w)/100,(percent*h)/100))
 
+#moc.start_server()
 print("INIT> starting bmp server.")  
 BPMServer().run()
 print("INIT> started both servers.")

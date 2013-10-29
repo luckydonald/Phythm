@@ -408,8 +408,9 @@
 			var rect = inside.getBoundingClientRect();
 			//inside.style.width = (e.layerX-rect.left) + "px";
 			// calculate the %
-			var pct = Math.floor(((e.layerX-rect.left) / outside.offsetWidth) * 100) +5;
-			calcBar(pct);
+			var pct = (((e.layerX-rect.left) / outside.offsetWidth) * 100) +5;
+			calcBar(Math.floor(pct));
+			seek(pct);
 
 		}, false);
 	};
@@ -735,6 +736,11 @@
 	function pitchBPM(pitch){
 		applyAction({command:"changebpm&pitch=" + pitch, data:true});
 	}
+	function seek(percent){
+		percent += 0.001;
+		percent -= 0.001;
+		applyAction({command:"seek&percentage=" + percent, data:false});
+	}
 	var timeout = window.setTimeout("refreshInfos()", 1000);
 	
 	function zoomImage() {
@@ -960,6 +966,7 @@
 			<div id="lower_controls">
 				<div class="meta clear"    onclick="applyAction(commands.fullUpdate)">Update</div>
 				<div class="meta clear"    onclick="applyAction(commands.forceNext)">Force Next</div>
+				<div class="meta clear"    onclick="seek(20)">Seek 20%</div>
 				<div class="meta clear"    onclick="pitchBPM('180')">Shift with 180 BPM</div>
 				<div class="meta clear"    onclick="pitchBPM('0')">Shift with 0 BPM</div>
 				<div class="meta clear"    onclick="getCover()">Get Cover</div>
