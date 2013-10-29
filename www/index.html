@@ -238,6 +238,7 @@
 		position: absolute;
 		top:0;
 		left:0;
+		position: fixed;
 	}
 	
 	.arrow-up {
@@ -400,23 +401,34 @@
 	<script type="text/javascript">
 	
 	
+	var isMouseDown = false; //to detect the mouse drag.
+	function doSeek(e){
+		var rect = $("songprogress").getBoundingClientRect();
+		var pct = (((e.layerX-rect.left) / $("songprogressouter").offsetWidth) * 100) +5;
+		pct = (pct < 0 ? 0 : (pct > 100 ? 100 : pct)) 
+		calcBar(Math.floor(pct));
+		seek(pct);
+		$("songprogress").innerHTML = secondsToTomeString((infobuffer.seconds.max/100)*pct);
 
+	}	
 	window.onload = function() {
 		var outside = $("songprogressouter");
 		var inside = $("songprogress");
-		outside.addEventListener('click', function(e) {
-			var rect = inside.getBoundingClientRect();
-			//inside.style.width = (e.layerX-rect.left) + "px";
-			// calculate the %
-			var pct = (((e.layerX-rect.left) / outside.offsetWidth) * 100) +5;
-			calcBar(Math.floor(pct));
-			seek(pct);
+		outside.addEventListener('click', function(e) {	doSeek(e) }, false);
+		outside.addEventListener('mousemove', function(e) { if(isMouseDown) doSeek(e) }, false);	
+		outside.addEventListener('mousedown', function(e) { isMouseDown = true  }, false);
+		outside.addEventListener('mouseup'  , function(e) { isMouseDown = false }, false);
+		
+		//element.addEventListener("touchstart",  function(e) { isMouseDown = true  }, false);	
+		//element.addEventListener("touchstart",    function(e) {	doSeek(e) }, false);
+		//element.addEventListener("touchmove",     function(e) {	doSeek(e); alert("blub") }, false);
+		//element.addEventListener("touchend",    function(e) { isMouseDown = false }, false);
+		//element.addEventListener("touchcancel", function(e) { isMouseDown = false }, false);
+		
+		//outside.onmousedown = function(e) {  isMouseDown = true };
+		//outside.onmouseup   = function(e) { isMouseDown = false };
 
-		}, false);
 	};
-	
-	
-	
 	
 	
 	
@@ -452,6 +464,12 @@
 		cover: {command:"cover", data:false},
 		history: {command:"history", data:false}
 	}
+	var infobuffer = {
+		seconds:{
+			current:0,
+			max: 0
+		}
+	} 
 	
 	function ajaxRequest(){
 		var activexmodes=["Msxml2.XMLHTTP", "Microsoft.XMLHTTP"] //activeX versions to check for in IE
@@ -569,6 +587,8 @@
 		
 		var max = dataArray.info.song.totalsec;
 		var curr = dataArray.info.song.currentsec;
+		infobuffer.seconds.max = max;
+		infobuffer.seconds.current = curr;		
 		var progress = ((100/max)*curr);	
 		//alert("( 100 / "+ max + " ) * " + curr + " = " + progress);
 		
@@ -737,8 +757,6 @@
 		applyAction({command:"changebpm&pitch=" + pitch, data:true});
 	}
 	function seek(percent){
-		percent += 0.001;
-		percent -= 0.001;
 		applyAction({command:"seek&percentage=" + percent, data:false});
 	}
 	var timeout = window.setTimeout("refreshInfos()", 1000);
@@ -796,7 +814,7 @@
 		progresspx = (progresspx < 10 ? 10 : progresspx);
 		progressbar.style.borderRadius=styleStr;
 		progressbar.style.width=progresspx + "px";
-		progressbar.innerHTML = percent + "%";
+		//progressbar.innerHTML = percent + "%";
 
 	
 	}
@@ -966,7 +984,8 @@
 			<div id="lower_controls">
 				<div class="meta clear"    onclick="applyAction(commands.fullUpdate)">Update</div>
 				<div class="meta clear"    onclick="applyAction(commands.forceNext)">Force Next</div>
-				<div class="meta clear"    onclick="seek(20)">Seek 20%</div>
+				<div class="meta clear"    onclick="seek(0)">Seek 0%</div>
+				<div class="meta clear"    onclick="seek(50)">Seek 50%</div>
 				<div class="meta clear"    onclick="pitchBPM('180')">Shift with 180 BPM</div>
 				<div class="meta clear"    onclick="pitchBPM('0')">Shift with 0 BPM</div>
 				<div class="meta clear"    onclick="getCover()">Get Cover</div>

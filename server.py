@@ -128,7 +128,7 @@ class BPMServer():
             self.bpmHistory.append(self.bpm)
             self.bpmAverage = (sum(self.bpmHistory)/settings.conf["average"]) 
             self.info["bpm"] = self.bpmAverage + self.bpmShift
-            #print (self.autoplaynext_enabled, " | ", self.autoplaynext_endtime, "<",  time.time(), " = ", self.autoplaynext_endtime-time.time())
+            print ("MAIN.Autoplaynext>  Enabled: %s | Endtime: %i | Now: %i | Difference: %i " % (self.autoplaynext_enabled, self.autoplaynext_endtime, time.time(), (self.autoplaynext_endtime-time.time())))
             if self.autoplaynext_enabled and self.autoplaynext_endtime < time.time():
                 #self.autoplaynext_enabled = False
                 songToPlay = self.getBestMatch(self.bpm + self.bpmShift,self.diff)
@@ -136,7 +136,8 @@ class BPMServer():
                 self.playSong(songToPlay[2])  
                 self.updatePlayerStatisInfo()
             
-            #print("Run> %s BPM Statistics: Current BPM is %03.2f - Average BPM is %03.2f - Difference is %03.2f" % (self.keep_running, self.bpm,self.bpmAverage, time.time() - self.last_tick))
+            if self.debug:
+                ("Run> %s BPM Statistics: Current BPM is %03.2f - Average BPM is %03.2f - Difference is %03.2f" % (self.keep_running, self.bpm,self.bpmAverage, time.time() - self.last_tick))
             time.sleep(1) #important for CPU usage.
         
     def bpmTick(self): #DO NOT CALL THIS FROM THIS MAIN THREAD!!!!
@@ -144,17 +145,18 @@ class BPMServer():
         diff = curr - self.last_tick
         self.last_tick = curr
         self.bpm = ((1.0 / diff) * 60.0 ) + self.bpmShift
-             
-        #print("Tick! " + str(diff))
+        if self.debug:     
+            print("Tick> Difference: %s" % str(diff))
         
     def handleCMD(self, cmd): #DO NOT CALL THIS FROM THIS MAIN THREAD!!!! NEVER!
-        #print("HTTP> Handling:" + cmd)
+        if self.debug:
+            print("HTTP> Handling:" + cmd)
         if cmd.lower() == "info":
             self.updatePlayerStatisInfo()
             return {"status": 2, "info": self.info}
         
         if cmd.lower() == "playlast":
-            print(self.played_history)
+            #print(self.played_history)
             self.playing_index +=  -1
             print("CMD> %i Last Old Song: %s" % (self.playing_index, self.played_history[self.playing_index]["path"]))
             self.playSong(self.played_history[self.playing_index]["path"])
@@ -165,7 +167,6 @@ class BPMServer():
             rg = re.compile('(play&id=)'+'(\\d+)',re.IGNORECASE|re.DOTALL)
             m = rg.search(cmd.lower())
             if m:
-                print(m)
                 self.playing_index = index=int(m.group(2))
                 
                 print("CMD> %i Last Old Song: %s" % (self.playing_index, self.played_history[self.playing_index]["path"]))
@@ -239,15 +240,15 @@ class BPMServer():
             if m:
                 percentage = float(m.group(2))    
                 self.seek(percentage)
-                self.updatePlayerStatisInfo()
-                return {"status": 5, "info": self.info}
+                #self.updatePlayerStatisInfo()
+                return {"status": 5}
             rg = re.compile('(seek&percentage=)'+'(\\d+)',re.IGNORECASE|re.DOTALL)
             m = rg.search(cmd.lower())
             if m:
                 percentage = float(m.group(2))    
                 self.seek(percentage)
-                self.updatePlayerStatisInfo()
-                return {"status": 5, "info": self.info}
+                #self.updatePlayerStatisInfo()
+                return {"status": 5}
             return {"status": -205, "error": "Error in Regular Expression. Does not Match ([+-]?\\d*\\.\\d+)(?![-+0-9\\.]) Float."}    
             
         if cmd.lower() == self.shutdownCommand:
@@ -317,9 +318,28 @@ class BPMServer():
         if not songInfo['state'] == 0:
             self.autoplaynext_enabled = True
             self.autoplaynext_endtime = time.time() + ((songInfo['totalsec'] - songInfo['currentsec'])*1000)
-
         return songInfo
     
+    def seek(self,percentage):
+        songInfo = moc.info();
+        if songInfo['state'] == 0:
+            print("CMD> %i Last Old Song: %s" % (self.playing_index, self.played_history[self.playing_index]["path"]))
+            self.playSong(self.played_history[self.playing_index]["path"])
+            self.updatePlayerStatisInfo()
+            return #TODO something like an cool status.
+        percentage_multiplicator = float(float(songInfo["totalsec"])/100) #float(songInfo["currentsec"])
+        print("SEEK> New Jackpot Multiplicator: %f" % percentage_multiplicator)
+        time_to_seek_to = round(percentage * percentage_multiplicator)
+        time_to_seek_with = int(time_to_seek_to - int(float(songInfo["currentsec"])) )
+        print("SEEK> from %s (of %s) time to seek to %f, with %f that's %i (+%i) seconds" % (songInfo["currentsec"], songInfo["totalsec"],percentage, percentage_multiplicator, time_to_seek_to, time_to_seek_with))
+        moc.seek(time_to_seek_with)
+        songInfo = moc.info();
+
+        if not songInfo['state'] == 0:
+            self.autoplaynext_enabled = True
+            self.autoplaynext_endtime = time.time() + (int(int(float(songInfo['totalsec']) )- int(float(time_to_seek_to))))
+        
+        
     def getPlayerStatus(self,songInfo = moc.info()):
         #print("getPlyrStats> moc.info() returns")
         #print(songInfo)
@@ -365,8 +385,10 @@ class BPMServer():
             with open("www/no-cover.jpg", "rb") as image_file:  #todo: add to config
                 artwork = image_file.read()
                 encoded_string ="data:image/jpeg;charset=utf-8;base64," + base64.b64encode(artwork)
-                print("loading no-cover.jpg as cover")
-            print(encoded_string)
+                if self.debug:
+                    print("COVER> loading no-cover.jpg as cover")
+            if self.debug:
+                print("COVER> %s" % encoded_string)
             #self.cover_data = artwork
             #stream = io.BytesIO(artwork)
             #im = Image.open(stream)
@@ -377,7 +399,8 @@ class BPMServer():
             self.cover_data = artwork
             artwork_string = "data:image/jpeg;charset=utf-8;base64," + encoded_string
             return {"status": -203, "error": "File has no Cover.", "cover":artwork_string }
-        print("loading atwork cover as cover")
+        if self.debug:
+            print("COVER> loading atwork cover as cover")
 
         #self.cover_small = contents
         self.cover_data = artwork
@@ -395,14 +418,7 @@ class BPMServer():
                 if self.debug:
                     print("updatePlayerStatisInfo> No File Playing.")
         
-    def seek(self,percentage):
-        songInfo = moc.info();
-        percentage_multiplicator = float(float(songInfo["totalsec"])/100) #float(songInfo["currentsec"])
-        print("SEEK> New Jackpot Multiplicator: %f" % percentage_multiplicator)
-        time_to_seek_to = round(percentage * percentage_multiplicator)
-        time_to_seek_with = int(time_to_seek_to - int(float(songInfo["currentsec"])) )
-        print("SEEK> from %s (of %s) time to seek to %f, with %f that's %i (+%i) seconds" % (songInfo["currentsec"], songInfo["totalsec"],percentage, percentage_multiplicator, time_to_seek_to, time_to_seek_with))
-        moc.seek(time_to_seek_with)
+   
     def softQuit(self):
         print("=== Shutting down ===")
         try:
