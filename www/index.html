@@ -98,16 +98,19 @@
 	}
 	#songnotplaying
 	{
-		display: none;
-		color:red;
+		/*display: none;*/
 		
 	}
 	#songnotplayingtext {
 		-webkit-animation: notplayingpusate 1.0s infinite alternate;
 		-moz-animation: notplayingpusate 1.0s infinite alternate;
 		-animation: notplayingpusate 1.0s infinite alternate;
+		margin-right: 4px;
 		color:red;
 		font-size:2em;	
+		visibility: hidden;
+				color:red;
+
 	}
 	@-webkit-keyframes notplayingpusate {
 		from {
@@ -206,7 +209,7 @@
 		margin-top:2px;
 	}
 	.current td{
-		background-color:orange;
+		background-color:lightblue;
 	}
 	
 	#cover{
@@ -397,7 +400,7 @@
 	
 	
 	</head>
-	<body>
+	<body>	
 	<script type="text/javascript">
 	
 	
@@ -468,7 +471,9 @@
 		seconds:{
 			current:0,
 			max: 0
-		}
+		},
+		coverEnabled: false,
+		guiColor: "lightblue"
 	} 
 	
 	function ajaxRequest(){
@@ -561,23 +566,29 @@
 		$("bpmShift").innerHTML = dataArray.info.bpmShift + " BPM";
 			//(dataArray.info.bpmShift==0  ?  "&nbsp;" : (dataArray.info.bpmShift<0 ? "" : "+" ) + dataArray.info.bpmShift + "BPM");
 
-		if(notplaying)
+		if(notplaying) //thats like !playing
 		{
 			//$("songmeta").style.display="none";
-			$("songnotplayingtext").style.display="block";
+			//$("songnotplayingtext").style.display="block";
+			$("songnotplayingtext").style.visibility="visible";
 			if(stopped)
 			{
 				$("songprogress").innerHTML = "--:--";
 				$("songprogress").style.width = "0px";
 				$("songtotal").innerHTML = "--:--";
-				$("songnotplayingtext").style.display="block";
+				//$("songnotplayingtext").style.display="block";
+				$("songnotplayingtext").style.visibility="visible";
+
+				
+				
 
 			}
 		}
 		else
 		{
-			$("songnotplayingtext").style.display="none";
-			$("songmeta").style.display="block";	
+			//$("songnotplayingtext").style.display="none";
+			$("songnotplayingtext").style.visibility="hidden";
+			//$("songmeta").style.display="block";	
 		}
 		$("songtitle").innerHTML = ( stopped ? "" : (dataArray.info.song.title == "" ? "&nbsp;&nbsp;-&nbsp;&nbsp;" : dataArray.info.song.title));
 		$("songalbum").innerHTML = ( stopped ? "" : (dataArray.info.song.album == "" ? "&nbsp;&nbsp;-&nbsp;&nbsp;" : dataArray.info.song.album));	
@@ -764,11 +775,13 @@
 	function zoomImage() {
 		$("imageoverlay").style.visibility = "visible";
 		$("imageoverlay").style.display = "inline";
+		infobuffer.coverEnabled = true;
 		calculateImgSize();	
 	}
 	function dezoomImage() {
 		$("imageoverlay").style.visibility = "hidden";
 		$("imageoverlay").style.display = "none";
+		infobuffer.coverEnabled = false;
 	}
 	
 	
@@ -776,7 +789,7 @@
 	function showError(message) {
 		$("erroroverlay").style.visibility = "visible";
 		$("erroroverlay").style.display = "inline";
-		$("error").innerText = error;
+		$("error").innerHTML = message;
 		
 	}
 	function hideError() {
@@ -808,12 +821,14 @@
 		console.log("percent = " + percent + " \nfinalwidth = " +  finalwidth + " \n(percent*(finalwidth/100))\nprogresspx = " + progresspx);
 
 		progress = Math.round(percent);
-		var remaining = progresspx-(100*(finalwidth/100))+20; //not always factor x3
+		var remaining = progresspx-(100*(finalwidth/100))+20; //last 20 are filled with border.
 		remaining = (remaining > 0 && remaining != Number.NaN ? remaining : 0);
 		styleStr = "20px " + remaining + "px " + remaining + "px 20px";
 		progresspx = (progresspx < 10 ? 10 : progresspx);
 		progressbar.style.borderRadius=styleStr;
 		progressbar.style.width=progresspx + "px";
+		progressbar.style.backgroundColor = (percent < 90 ? infobuffer.guiColor : (percent < 95 ? "lightgreen" : (percent < 98 ? "orange":"red")));
+
 		//progressbar.innerHTML = percent + "%";
 
 	
@@ -872,6 +887,15 @@
 		$("overlayimage").style.maxWidth = (screen.width) + "px";
 		$("overlayimage").style.maxHeight = (screen.height) + "px";
 	}
+	function setGuiColor(color){
+		document.getElementByClass("current")[0].style.backgroundColor=color;
+		infobuffer.guiColor = color;
+	}
+	
+	
+	
+	
+	
 	
 	if(typeof window.orientation === 'undefined') {
 		/* use media query technique, fix for mobile firefox */
@@ -911,6 +935,7 @@
 			case 13:
 				//enter
 				//cover
+				if (!infobuffer.coverEnabled){ zoomImage(); }else { dezoomImage(); return; };
 				hideError();
 				break;
 			case 27:
@@ -943,11 +968,8 @@
 
 
 
-
-
-
 <div id="imageoverlay" class="overlay" onclick="dezoomImage()" class="hcenter"><img id="overlayimage" onclick="dezoomImage()" scr="" class="hcenter" /></div>
-<div id="erroroverlay" class="overlay" onclick="hideError()" class="hcenter"><div class="hcenter"><div class="center meta error clear" id="error">Example Error Occurred.</div></div></div>
+<div id="erroroverlay" class="overlay" onclick="hideError()" class="hcenter" style="text-align:center;"><div class="hcenter center" style="position:absolute; top:0; height:50%;width:100%;text-align:center;"><div style="position:absolute; text-align:center; bottom: -0.5em" class="center meta error clear" id="error">Example Error Occurred.</div></div></div>
 
 <div id="infobox" class="clear">
 	<div id="first_row">
@@ -981,16 +1003,7 @@
 			<div id="upper_controls">
 				
 			</div>
-			<div id="lower_controls">
-				<div class="meta clear"    onclick="applyAction(commands.fullUpdate)">Update</div>
-				<div class="meta clear"    onclick="applyAction(commands.forceNext)">Force Next</div>
-				<div class="meta clear"    onclick="seek(0)">Seek 0%</div>
-				<div class="meta clear"    onclick="seek(50)">Seek 50%</div>
-				<div class="meta clear"    onclick="pitchBPM('180')">Shift with 180 BPM</div>
-				<div class="meta clear"    onclick="pitchBPM('0')">Shift with 0 BPM</div>
-				<div class="meta clear"    onclick="getCover()">Get Cover</div>
-				<div class="meta clear"    onclick="showError('new ExampleError.throw()')">Example Error</div>
-			</div>
+			
 			<div id="new_controls" class="left">
 				<div id="prev"       onclick='applyAction(commands.last)'></div>
 				<div id="play"      onclick='applyAction(commands.forceNext)'></div>
@@ -1009,6 +1022,16 @@
 			</div>
 			<div class="left">
 				<div class="meta" id="songnotplayingtext">Not Playing.</div>
+			</div>
+			<div id="lower_controls">
+				<div class="meta clear"    onclick="applyAction(commands.fullUpdate)">Update</div>
+				<div class="meta clear"    onclick="applyAction(commands.forceNext)">Force Next</div>
+				<div class="meta clear"    onclick="seek(0)">Seek 0%</div>
+				<div class="meta clear"    onclick="seek(50)">Seek 50%</div>
+				<div class="meta clear"    onclick="pitchBPM('180')">Shift with 180 BPM</div>
+				<div class="meta clear"    onclick="pitchBPM('0')">Shift with 0 BPM</div>
+				<div class="meta clear"    onclick="getCover()">Get Cover</div>
+				<div class="meta clear"    onclick="showError('new ExampleError.throw()')">Example Error</div>
 			</div>
 		</div>
 	</div>

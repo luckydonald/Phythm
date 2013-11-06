@@ -1,3 +1,9 @@
+#
+# TODO: Volume Slider.
+#
+#
+
+
 #!/usr/bin/env python
 import json, random, re, sqlite3, settings, string, socket, SimpleHTTPServer, SocketServer, threading
 import iotest, time, math #bpm
@@ -128,11 +134,11 @@ class BPMServer():
             self.bpmHistory.append(self.bpm)
             self.bpmAverage = (sum(self.bpmHistory)/settings.conf["average"]) 
             self.info["bpm"] = self.bpmAverage + self.bpmShift
-            print ("MAIN.Autoplaynext>  Enabled: %s | Endtime: %i | Now: %i | Difference: %i " % (self.autoplaynext_enabled, self.autoplaynext_endtime, time.time(), (self.autoplaynext_endtime-time.time())))
+            print ("MAIN.autoplay>  Enabled: %s | Endtime: %i | Now: %i | Difference: %i " % (self.autoplaynext_enabled, self.autoplaynext_endtime, time.time(), (self.autoplaynext_endtime-time.time())))
             if self.autoplaynext_enabled and self.autoplaynext_endtime < time.time():
                 #self.autoplaynext_enabled = False
                 songToPlay = self.getBestMatch(self.bpm + self.bpmShift,self.diff)
-                print("Main> %i New Song: %s" % (self.playing_index, songToPlay[2]))
+                print("MAIN.autoplay> %i New Song: %s" % (self.playing_index, songToPlay[2]))
                 self.playSong(songToPlay[2])  
                 self.updatePlayerStatisInfo()
             
@@ -295,7 +301,7 @@ class BPMServer():
         print("playSong> Waiting for Song to load...")
         songInfo =  moc.current_track_info()
         while(songInfo['state']==0):
-            print("playSong> Still waiting for Song to load...")
+            print("playSong> Still waiting for Song to load...    %s" % file)
             songInfo =  moc.current_track_info()
             time.sleep(0.01)
         print(songInfo);
@@ -317,7 +323,7 @@ class BPMServer():
             time.sleep(0.01)
         if not songInfo['state'] == 0:
             self.autoplaynext_enabled = True
-            self.autoplaynext_endtime = time.time() + ((songInfo['totalsec'] - songInfo['currentsec'])*1000)
+            self.autoplaynext_endtime = time.time() + (( int(songInfo['totalsec']) - int(songInfo['currentsec']) ))
         return songInfo
     
     def seek(self,percentage):
