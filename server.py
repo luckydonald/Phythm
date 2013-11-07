@@ -138,7 +138,6 @@ class BPMServer():
             if self.autoplaynext_enabled and self.autoplaynext_endtime < time.time():
                 #self.autoplaynext_enabled = False
                 songToPlay = self.getBestMatch(self.bpm + self.bpmShift,self.diff)
-                print(songToPlay[2])
                 print("MAIN.autoplay> %i New Song: %s" % (self.playing_index, songToPlay[2]))
                 self.playSong(songToPlay[2])  
                 self.updatePlayerStatisInfo()
@@ -270,46 +269,31 @@ class BPMServer():
         for song in c: 
                             # (index, bpm, file)  #index starts at 1!
                             # (1, -1, u'/music/SUBFOLDER/(I Want to Wear) Yellow & Blue - TalkAcanthi - Rocking is Magic.mp3')
+            song
             if self.debug:
                 print("Match> Song is %s" % song[2])
-            was_played = 0
-            audiofile = eyed3.load(song[2]) #path
-
-            new_array = {
-                "count":    0,
-                "id":       song[0],
-                "bpm":      song[1],
-                "path":     song[2],
-                "title":    audiofile.tag.title,
-                "album":    audiofile.tag.album,
-                "artist":   audiofile.tag.artist,
-                "quality":  0
-            }
-            
+            was_played = False
             for i in self.played_history:
                 if song[0] == i["id"]:
-                    was_played = i["count"]
-                    i["quality"] = int(math.fabs(bpm - i["bpm"])*2)-i["count"]
-                    i["count"]+= 1
-                    
-            max_value = 0
-            max_item = 0
-            for i in self.played_history:
-                if i["quality"]>max_value:
-                    max_value = i["quality"]
-                    max_item = i
-            print (max_value," nebst ",max_item)
-            new_array["quality"] = int(math.fabs(bpm - new_array["bpm"])*2)
+                    was_played = True
+            if was_played:
+                if self.debug:
+                    print("Match> Already played, skipping.")
+                continue
+            audiofile = eyed3.load(song[2]) #path
             bpm = audiofile.tag.bpm
-            if was_played == 0:
-                 self.played_history.append(new_array)
-            
+            self.played_history.append({"id":       song[0],
+                                        "bpm":      song[1],
+                                        "path":     song[2],
+                                        "title":    audiofile.tag.title,
+                                        "album":    audiofile.tag.album,
+                                        "artist":   audiofile.tag.artist
+                                        })
             self.playing_index=len(self.played_history)-1 #Reset 
             db.close()
             return song #stop here            
             
         db.close()
-        #if einstellung:
         return self.getBestMatch(bpm,diff+5)
         
     def playSong(self,file):
