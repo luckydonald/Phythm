@@ -239,7 +239,10 @@ class BPMServer():
                 self.updatePlayerStatisInfo()
                 
                 return {"status": 2, "info": self.info}
-            return {"status": -204, "error": "Error in Regular Expression. Does not Match ([-+]?\\d+) Integer."}    
+            return {"status": -204, "error": "Error in Regular Expression. Does not Match ([-+]?\\d+) Integer."}  
+        if cmd.lower() == "print":
+            return {"status": 2, "dict":moc.current_track_info()}
+  
         if cmd.lower().startswith('seek&percentage='):
             rg = re.compile('(seek&percentage=)'+'([+-]?\\d*\\.\\d+)(?![-+0-9\\.])',re.IGNORECASE|re.DOTALL)
             m = rg.search(cmd.lower())
@@ -256,7 +259,23 @@ class BPMServer():
                 #self.updatePlayerStatisInfo()
                 return {"status": 5}
             return {"status": -205, "error": "Error in Regular Expression. Does not Match ([+-]?\\d*\\.\\d+)(?![-+0-9\\.]) Float."}    
-            
+
+        if cmd.lower().startswith('volume&percentage='):
+            rg = re.compile('(volume&percentage=)'+'([+-]?\\d*\\.\\d+)(?![-+0-9\\.])',re.IGNORECASE|re.DOTALL)
+            m = rg.search(cmd.lower())
+            if m:
+                percentage = float(m.group(2))    
+                self.volume(percentage)
+                #self.updatePlayerStatisInfo()
+                return {"status": 5}
+            rg = re.compile('(volume&percentage=)'+'(\\d+)',re.IGNORECASE|re.DOTALL)
+            m = rg.search(cmd.lower())
+            if m:
+                percentage = float(m.group(2))    
+                self.volume(percentage)
+                #self.updatePlayerStatisInfo()
+                return {"status": 5}
+            return {"status": -205, "error": "Error in Regular Expression. Does not Match ([+-]?\\d*\\.\\d+)(?![-+0-9\\.]) Float."}             
         if cmd.lower() == self.shutdownCommand:
             self.softQuit();
         else:
@@ -308,8 +327,7 @@ class BPMServer():
         if not songInfo['state'] == 0:
             self.autoplaynext_enabled = True
             self.autoplaynext_endtime = time.time() + (( int(songInfo['totalsec']) - int(songInfo['currentsec']) ))
-        return songInfo
-    
+
     def pauseSong(self):
         songInfo = moc.pause()
         self.autoplaynext_enabled = False
@@ -345,7 +363,10 @@ class BPMServer():
             self.autoplaynext_enabled = True
             self.autoplaynext_endtime = time.time() + (int(int(float(songInfo['totalsec']) )- int(float(time_to_seek_to))))
         
-        
+    def volume(self, percentage):
+         moc.seek(time_to_seek_with)
+         songInfo = moc.info()
+         print(songInfo)
     def getPlayerStatus(self,songInfo = moc.info()):
         #print("getPlyrStats> moc.info() returns")
         #print(songInfo)

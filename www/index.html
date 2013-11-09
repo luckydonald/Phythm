@@ -915,7 +915,9 @@
 
 	}
 	window.onresize=calculateImgSize;
-	document.onkeypress = (function(e){
+	//document.onkeyup
+	//document.onkeypress 
+	document.onkeyup = (function(e){
 		switch (e.keyCode) {
 			case 39:
 				//right
@@ -943,7 +945,10 @@
 				//leave cover
 				hideAll();
 				break;
+			default:
+				//alert(e.keyCode);
 		};
+		e.preventDefault();
 
 	});  
 	

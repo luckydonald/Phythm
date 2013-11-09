@@ -1,6 +1,6 @@
 #
 #
-# TODO: line 34 - Move MIME Types to setting .json
+# TODO:
 #
 #
 
@@ -25,7 +25,7 @@ def processFile(currentDir):
     currentDir = os.path.abspath(currentDir)
     # Get a list of files in currentDir
     filesInCurDir = os.listdir(unicode(currentDir))
-    
+    files_without_bpm = []
     # Traverse through all files
     for file in filesInCurDir:
         curFile = os.path.join(currentDir, file)
@@ -46,15 +46,17 @@ def processFile(currentDir):
                 audiofile = eyed3.load(curFile)
                 bpm = audiofile.tag.bpm
                 if bpm == None:
-                    bpm = 0
-                print('=> Found fitting \'%s:\' file with %3d BPM: %s '% (curFileExtension,bpm,curFile))
-                c.execute("INSERT INTO music VALUES (NULL,?,?)" , (bpm, curFile))
+                    bpm = 0;
+                    files_without_bpm.append(curFile)
+                    print('=> NOT fitting \'%s:\' file with %3d BPM: %s '% (curFileExtension,bpm,curFile))
+
+                else:
+                    print('=> Found fitting \'%s:\' file with %3d BPM: %s '% (curFileExtension,bpm,curFile))
+                    c.execute("INSERT INTO music VALUES (NULL,?,?)" , (bpm, curFile))
         else:
             # We got a directory, enter into it for further processing
             #print('# Found dir: %s' % curFile)
             processFile(curFile)
-                
-            
 
                 
                 
@@ -71,6 +73,8 @@ if __name__ == '__main__':
     # Get the current working directory
     #currentDir = os.getcwd()
     currentDir = settings.conf["music_path"]   #for example "/music"
+    global files_without_bpm
+    files_without_bpm = []
     print('=== Creating Database === ')
 
     print('Starting processing in %s' % currentDir)
@@ -95,11 +99,16 @@ if __name__ == '__main__':
     #print(' |-> Creating Table')
 
     
-    c.execute('''CREATE TABLE music (id  INTEGER PRIMARY KEY, bpm int, path text)''')
+    c.execute('''CREATE TABLE music (id  INTEGER PRIMARY KEY, bpm int, path text)''') #, int playcount
     
     # Start Processing
     processFile(currentDir)
-    
+    print(files_without_bpm)
+
+    for file in files_without_bpm:
+
+        print("Missing BPM Tag in file %s" % file)
+
     sqlconn.commit()
     sqlconn.close()
 
