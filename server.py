@@ -6,7 +6,7 @@
 
 #!/usr/bin/env python
 import json, random, re, sqlite3, settings, string, socket, SimpleHTTPServer, SocketServer, threading
-import iotest, time, math #bpm
+import time, math #bpm
 import eyed3, moc #id3 and the player
 from mutagen import File #cover artwork
 #from PIL import Image #better cover artwork processing.
@@ -16,6 +16,8 @@ import module_locator
 import base64 #cover artwork
  # as seen in https://github.com/jonashaag/python-moc   -  DOC at http://moc.lophus.org/
 
+
+#trying to import GPIO Port drivers. If failing load iotest emulation function.
 
 
 class ModHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
@@ -68,7 +70,18 @@ class HTTPserver(threading.Thread):
 class BPMServer():
     def stringGenerator(self,length):
         return ''.join(random.choice(string.lowercase) for i in range(length))
-    
+    def Interrupt(self):
+        if GPIO.input(settings.conf["GPIO"]): #avoid the turn off Interrupt
+            self.bpmTick()
+    try:
+        import RPi.GPOI as GPIO 
+    except ImportError:
+        import iotest
+    else:
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(settings.conf["GPIO"],GPIO.IN, pull_down_up = GPIO.PUD_DOWN)
+        GPIO.add_event_detect(settings.conf["GPIO"], GPIO.RISING, callback = self.Interrupt, bouncetime = 200)
+        
     diff = settings.conf["max_diff"]
     
     server = HTTPserver()
@@ -469,7 +482,11 @@ class BPMServer():
 #moc.start_server()
 print("INIT> starting bmp server.")  
 BPMServer().run()
+print("INIT> starting sensor server.")
+
+
 print("INIT> started both servers.")
+
 #keep_running = True    
   
 

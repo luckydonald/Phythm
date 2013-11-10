@@ -9,7 +9,8 @@ default = {
         "max_diff":                     20,
         "tick_gpio":                    0,
         "average":						20,  						#TODO: Needs better name
-        "timeout":						5   # value in seconds		#TODO: Needs better name
+        "timeout":						5,   # value in seconds		#TODO: Needs better name
+        "GPIO":                         4
         }
 
 config_file = "config.json"
