@@ -73,7 +73,7 @@ class BPMServer():
         if GPIO.input(settings.conf["GPIO"]): #avoid the turn off Interrupt
             self.bpmTick()
     try: #trying to import GPIO Port drivers. If failing load iotest emulation function.
-        import RPi.GPOI as GPIO 
+        import RPi.GPIO as GPIO 
     except ImportError:
         import iotest
         use_GPIO = False
