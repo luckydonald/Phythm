@@ -17,7 +17,6 @@ import base64 #cover artwork
  # as seen in https://github.com/jonashaag/python-moc   -  DOC at http://moc.lophus.org/
 
 
-#trying to import GPIO Port drivers. If failing load iotest emulation function.
 
 
 class ModHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
@@ -73,11 +72,13 @@ class BPMServer():
     def Interrupt(self):
         if GPIO.input(settings.conf["GPIO"]): #avoid the turn off Interrupt
             self.bpmTick()
-    try:
+    try: #trying to import GPIO Port drivers. If failing load iotest emulation function.
         import RPi.GPOI as GPIO 
     except ImportError:
         import iotest
+        use_GPIO = False
     else:
+        use_GPIO = True
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(settings.conf["GPIO"],GPIO.IN, pull_down_up = GPIO.PUD_DOWN)
         GPIO.add_event_detect(settings.conf["GPIO"], GPIO.RISING, callback = self.Interrupt, bouncetime = 200)
@@ -105,6 +106,7 @@ class BPMServer():
     keep_running = True
     debug = False
     shutdownCommand = "0000" #default, overwritten later.
+    use_GPIO = False
     info = {
         "bpm": 0,
         "bpmShift":+0,
@@ -134,7 +136,8 @@ class BPMServer():
         self.server.bpmServer = self
         self.server.start()
         
-        iotest.start(self)
+        if not self.use_GPIO:
+            iotest.start(self)
         self.shutdownCommand = self.stringGenerator(6)  #shutdown via webUI
         for _ in range(5):
             print("To Shut down please visit http://localhost:%s/cmd.json?%s via your Browser." % (settings.conf["port"],self.shutdownCommand))
