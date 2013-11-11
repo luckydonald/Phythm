@@ -28,7 +28,10 @@ class serverThread(threading.Thread):
                 while True:
                     conn.recv(1)
                     self.bpmServer.bpmTick()
-            except:
+            except Exception as inst:
+                print type(inst)     # the exception instance
+                print inst.args      # arguments stored in .args
+                print inst
                 s.close()
                 time.sleep(1)
                 print("BPM SERVER> Restarting...") 

@@ -8,6 +8,7 @@
 import json, random, re, sqlite3, settings, string, socket, SimpleHTTPServer, SocketServer, threading
 import time, math #bpm
 import eyed3, moc #id3 and the player
+import iotest #fallback for debuging without GPIO ports
 from mutagen import File #cover artwork
 #from PIL import Image #better cover artwork processing.
 import io #better cover artwork processing.
@@ -69,19 +70,21 @@ class HTTPserver(threading.Thread):
 class BPMServer():
     def stringGenerator(self,length):
         return ''.join(random.choice(string.lowercase) for i in range(length))
-    def Interrupt(self):
+    
+    use_GPIO = False
+   
+    
+    def Interrupt(self, channel):
+        print("Interrupt> Channel= %s" % channel)
+        try: #trying to import GPIO Port drivers. If failing load iotest emulation function.
+            import RPi.GPIO as GPIO 
+        except ImportError:
+            self.use_GPIO = False
+        if self.use_GPIO:
         if GPIO.input(settings.conf["GPIO"]): #avoid the turn off Interrupt
-            self.bpmTick()
-    try: #trying to import GPIO Port drivers. If failing load iotest emulation function.
-        import RPi.GPIO as GPIO 
-    except ImportError:
-        import iotest
-        use_GPIO = False
-    else:
-        use_GPIO = True
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setup(settings.conf["GPIO"],GPIO.IN, pull_up_down = GPIO.PUD_DOWN)
-        GPIO.add_event_detect(settings.conf["GPIO"], GPIO.RISING, callback = self.Interrupt, bouncetime = 200)
+                self.bpmTick()
+    #
+    
         
     diff = settings.conf["max_diff"]
     
@@ -129,15 +132,25 @@ class BPMServer():
 
     
     def run(self):
-        
-        print("HTTP> Starting HTTP Server!")
+        try: #trying to import GPIO Port drivers. If failing load iotest emulation function.
+            import RPi.GPIO as GPIO 
+        except ImportError:
+            self.use_GPIO = False
+        else: 
+            self.use_GPIO = True
+        if self.use_GPIO:
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(settings.conf["GPIO"],GPIO.IN, pull_up_down = GPIO.PUD_DOWN)
+        GPIO.add_event_detect(settings.conf["GPIO"], GPIO.RISING, callback = self.Interrupt, bouncetime = 200)
+
+    print("HTTP> Starting HTTP Server!")
 
         self.server.daemon = True
         self.server.bpmServer = self
         self.server.start()
         
         if not self.use_GPIO:
-            iotest.start(self)
+            iotest.start(self)    
         self.shutdownCommand = self.stringGenerator(6)  #shutdown via webUI
         for _ in range(5):
             print("To Shut down please visit http://localhost:%s/cmd.json?%s via your Browser." % (settings.conf["port"],self.shutdownCommand))
@@ -492,4 +505,3 @@ print("INIT> started both servers.")
 
 #keep_running = True    
   
-
