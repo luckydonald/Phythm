@@ -80,7 +80,7 @@ class BPMServer():
     else:
         use_GPIO = True
         GPIO.setmode(GPIO.BCM)
-        GPIO.setup(settings.conf["GPIO"],GPIO.IN, pull_down_up = GPIO.PUD_DOWN)
+        GPIO.setup(settings.conf["GPIO"],GPIO.IN, pull_up_down = GPIO.PUD_DOWN)
         GPIO.add_event_detect(settings.conf["GPIO"], GPIO.RISING, callback = self.Interrupt, bouncetime = 200)
         
     diff = settings.conf["max_diff"]
