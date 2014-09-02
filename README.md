@@ -86,3 +86,15 @@ Installation
 	* $ `sudo rm eyeD3_temp/ -R -f` We don't need it, it is installed.
 	* Now retry `sudo python server.py`.
 	
+
+7. Install parts which will needed in future versions
+	* $ `cd Phythm`
+	* $ `mkdir temp`	
+	* $ `cd temp`	
+	* $ `git clone https://github.com/rockymeza/wifi.git`
+	* $ `cd wifi`	
+	* $ `sudo python setup.py install`	
+	* $ `cd ../..`	
+	* $ `rm temp -R`
+	* $ `sudo apt-get install python-dev`
+	* ???
