@@ -87,7 +87,7 @@ Installation
 	* Now retry `sudo python server.py`.
 	
 
-7. Install parts which will needed in future versions
+7. Install parts which will (now: never) be needed in future versions
 	* $ `cd Phythm`
 	* $ `mkdir temp`	
 	* $ `cd temp`	
@@ -98,3 +98,22 @@ Installation
 	* $ `rm temp -R`
 	* $ `sudo apt-get install python-dev`
 	* ???
+
+8. **Set Up bluetooth**
+	* $ `sudo apt-get install bluetooth bluez-utils`
+	* edit `/etc/bluetooth/audio.conf`
+	``` ini
+	[General]
+	Enable=Source,Sink,Media,Socket,Control
+	```
+	* now set your headset in pairing mode, and find it using $ `hcitool scan`
+	* 
+	* edit `/etc/asound.conf`
+	*  Now I am tired of writing this.
+	* (see https://kernelschmelze.de/blog/2013/08/15/raspberry-pi-als-bluetooth-audioschleuder/ )
+	 
+9. **MPC**
+	* $ `git clone git://github.com/Mic92/python-mpd2.git`
+	* $ `cd python-mdp2`
+	* $ `sudo python setup.py install`
+	*  ~~ And I stopped writing it down...
