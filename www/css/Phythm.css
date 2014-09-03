@@ -1,0 +1,372 @@
+body
+{
+    width:400px;
+
+}
+#infobox, #historypane
+{
+    background-color: #f0f0f0;
+    border-radius: 5px;
+    width:400px;
+}
+#infobox
+{
+    padding: 5px;
+}
+.historyelement
+{
+    background-color: #e0e0e0;
+    border-radius: 5px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-left:2px;
+    padding-right:2px;
+}
+#progressbar{
+    margin-left: 0;
+    margin-right: 0;
+    padding-left: 0;
+    padding-right: 0;
+}
+.progressbar-outer
+{
+    padding:2px;
+    background-color:#666;
+    //border:1px solid black;
+    border-radius: 20px;
+    text-align:center;
+}
+.progressbar-inner
+{
+    width:0px;
+    background-color:orange;
+    //border:1px solid lightgreen;
+    border-radius: 20px;
+    padding-top: 0.05em;
+    padding-bottom: 0.05em;
+
+    
+}
+#songtotal{
+    margin-left: 10px;
+    padding-top: 0.2em;
+    padding-bottom: 0.15em;
+    margin-top: 0;
+    margin-right: 0;
+}
+.left
+{
+    float: left;
+} 
+.right
+{ 
+    float: right;
+}
+.center
+{
+    float: center;
+} 
+.blockleft{
+    clear: left;
+}
+.blockright{
+    clear: right;
+}
+.blockboth{
+    clear: both;
+}
+
+    
+.full
+{
+    left: 0;
+    right: 0;
+    width: 100%;
+}
+#rightinfo{
+    display:block;	
+}
+#songnotplaying
+{
+    /*display: none;*/
+    
+}
+#songnotplayingtext {
+    -webkit-animation: notplayingpusate 1.0s infinite alternate;
+    -moz-animation: notplayingpusate 1.0s infinite alternate;
+    -animation: notplayingpusate 1.0s infinite alternate;
+    margin-right: 4px;
+    color:red;
+    font-size:2em;	
+    visibility: hidden;
+            color:red;
+
+}
+@-webkit-keyframes notplayingpusate {
+    from {
+        color: 		  #cc0000;
+        background-color: #cccccc;
+    }
+    to {
+        color: 		  #ff0000;
+        background-color: #ffcccc;
+    }
+}
+@-moz-keyframes notplayingpusate {
+    from {
+        color: 		  #cc0000;
+        background-color: #cccccc;
+    }
+    to {
+        color: 		  #ff0000;
+        background-color: #ff0000;
+    }
+}
+@keyframes notplayingpusate {
+    from {
+        color: 		  #cc0000;
+        background-color: #cccccc;
+    }
+    to {
+        color: 		  #ff0000;
+        background-color: #ffcccc;
+    }
+}
+
+.error {
+    -webkit-animation: errorpusate 1s infinite alternate;
+    -moz-animation: errorpusate 1s infinite alternate;
+    -animation: errorpusate 1s infinite alternate;
+    text-shadow: 0 0 8px #ccc;
+}
+@-webkit-keyframes errorpusate {
+    from { box-shadow: 0 0 10px #333; }
+    to { box-shadow: 0 0 20px #c00; }
+}
+@-moz-keyframes errorpusate {
+    from { box-shadow: 0 0 10px #333; }
+    to { box-shadow: 0 0 20px #c00; }
+}
+@keyframes errorpusate {
+    from { box-shadow: 0 0 10px #333; }
+    to { box-shadow: 0 0 20px #c00; }
+}
+
+
+
+#songmeta
+{
+    display: block;
+    margin-top: 2px;
+    padding-bottom: 4px;
+
+}
+#songalbum
+{
+    margin-right:4px;
+}
+
+.meta
+{
+    border-radius: 5px;
+    background-color:#cccccc;
+    padding: 2px;
+    margin-top:4px;
+    clear: right;
+    text-overflow: ellipsis;
+}
+.metafirst
+{
+    border-radius: 5px 0 0 5px;
+}
+.metamiddle
+{
+    border-radius: 0 0 0 0;
+}
+.metalast
+{
+    border-radius: 0 5px 5px 0;
+}
+.segment
+{
+    margin-top: 4px;
+    padding: 2px;
+    margin:2px;
+}
+.clear
+{
+    display:inline-block;
+    margin-top:2px;
+}
+.current td{
+    background-color:lightblue;
+}
+
+#cover{
+    height:100px;
+    display:block;
+    padding:5px;
+    background-color:#cccccc;
+    vertical-align: middle;
+    border-radius: 5px;
+
+}
+#coverimage{
+    margin-left:auto;
+    margin-right:auto;
+    text-align:right;
+    height:100px;
+    border-radius: 5px;
+    display:block;
+    padding: 0 auto !important;
+}
+.overlay{
+    z-index: 10;
+    text-align: center;
+    display: none;
+    visibility:hidden;
+    width:100%;
+    height:100%;
+    background-color:rgba(0,0,0,0.7);
+    position: absolute;
+    top:0;
+    left:0;
+    position: fixed;
+}
+
+.arrow-up {
+    width: 0; 
+    height: 0; 
+    border-left: 2em solid transparent;
+    border-right: 2em solid transparent;
+    border-bottom: 2em solid #666;
+}
+
+.arrow-down {
+    width: 0; 
+    height: 0; 
+    border-left: 2em solid transparent;
+    border-right: 2em solid transparent;
+    border-top: 2em solid #666; /* blue */
+}
+
+#bpm {
+    text-align: center;
+    font-size:3em;
+}
+.historyid{
+    text-align: right;	
+}
+
+.new_controls i {
+     color:  #666;
+}
+
+#playpause, #play, #prev, #next {
+    display:inline-block;
+    margin-left: 20px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    color:  #666;
+}
+
+
+/*#playpause, #play, #prev, #next {
+    width:80px;
+    height: 80px;
+    position: relative;
+}
+#playpause:before {
+    width: 0;
+    height: 0;
+    border-left: 30px solid black;
+    border-right: 30px solid transparent;
+    border-top: 30px solid transparent;
+    border-bottom: 30px solid transparent;
+    position: absolute;
+    content: "";
+    top: 10px;
+    left: 25px;
+}
+ 
+#playpause:after {
+    width: 15px;
+    height: 60px;
+    background: black;
+    position: absolute;
+    content: "";
+    top: 10px;
+    right: 15px;
+}
+ 
+ */
+/*#prev{
+    width: 0; 
+    height: 0; 
+    border-top: 1.6em solid transparent;
+    border-bottom: 1.6em solid transparent;
+    border-right: 2em solid #666;
+}
+#prev:before{
+    width: 0; 
+    height: 0; 
+    border-top: 1.0em solid #666;
+    border-bottom: 1.0em solid #666;
+    border-right: 0.5em solid #666;
+    right: 0.2em;
+    position:relative;
+    bottom:0.6em;
+    content: "";
+}
+#playpause{
+    width: 0; 
+    height: 0; 
+    border-top: 2em solid transparent;
+    border-bottom: 2em solid transparent;
+    border-left: 2em solid #666; 
+}
+#playpause:before{
+    width: 0; 
+    height: 0; 
+    border-top: 1.0em solid transparent;
+    border-bottom: 1.0em solid transparent;
+    border-left: 0.5em solid transparent;
+    right: 0.4em;
+    position:relative;
+    content: "";
+}
+#next{
+    width: 0; 
+    height: 0; 
+    border-top: 1.6em solid transparent;
+    border-bottom: 1.6em solid transparent;
+    border-left: 2em solid #666;
+}
+#next:after{
+    width: 0; 
+    height: 0; 
+    border-top: 1.0em solid #666;
+    border-bottom: 1.0em solid #666;
+    border-left: 0.5em solid #666;
+    right: 0.4em;
+    position:relative;
+    bottom:0.6em;
+    content: "";
+}*/
+
+.hcenter{
+    margin: auto!important;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+#bpmShift{
+    color: grey;	
+}
+.cut{
+    white-space: nowrap;
+    overflow: hidden;
+}
+    

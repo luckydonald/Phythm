@@ -43,16 +43,21 @@ def processFile(currentDir):
                 processFile.counter += 1
                 
                 # Print it's name
-                audiofile = eyed3.load(curFile)
-                bpm = audiofile.tag.bpm
-                if bpm == None:
-                    bpm = 0;
-                    files_without_bpm.append(curFile)
-                    print('=> NOT fitting \'%s:\' file with %3d BPM: %s '% (curFileExtension,bpm,curFile))
-
+                # print("Loading file: " + curFile)
+                audiofile = eyed3.core.load(curFile)
+                if audiofile == None:
+                    files_without_meta.append(curFile)
+                    print('=> Corrupted Metadata: %s' % curFile)
                 else:
-                    print('=> Found fitting \'%s:\' file with %3d BPM: %s '% (curFileExtension,bpm,curFile))
-                    c.execute("INSERT INTO music VALUES (NULL,?,?)" , (bpm, curFile))
+                    bpm = audiofile.tag.bpm
+                    if bpm == None:
+                        bpm = 0;
+                        files_without_bpm.append(curFile)
+                        print('=> NOT fitting \'%s:\' file with %3d BPM: %s '% (curFileExtension,bpm,curFile))
+
+                    else:
+                        print('=> Found fitting \'%s:\' file with %3d BPM: %s '% (curFileExtension,bpm,curFile))
+                        c.execute("INSERT INTO music VALUES (NULL,?,?)" , (bpm, curFile))
         else:
             # We got a directory, enter into it for further processing
             #print('# Found dir: %s' % curFile)
@@ -75,6 +80,7 @@ if __name__ == '__main__':
     currentDir = settings.conf["music_path"]   #for example "/music"
     global files_without_bpm
     files_without_bpm = []
+    files_without_meta = []
     print('=== Creating Database === ')
 
     print('Starting processing in %s' % currentDir)

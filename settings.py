@@ -1,21 +1,19 @@
 import os, json
 
 conf = {}
-
+config_file = "config.json"
+needs_update = False
 default = {
         "port":                          8080,
         "music_path":                   ".",
         "audio_types":             ['audio/mpeg'],
-        "max_diff":                     20,
+        "debug":                     False,
         "tick_gpio":                    0,
-        "average":						20,  						#TODO: Needs better name
-        "timeout":						5,   # value in seconds		#TODO: Needs better name
+        "average":                        20,                          #TODO: Needs better name
+        "timeout":                        5,   # value in seconds        #TODO: Needs better name
         "GPIO":                         4
         }
 
-config_file = "config.json"
-
-needs_update = False
 
 if os.path.exists(config_file):
     print("reading configuration from " + config_file)
@@ -36,7 +34,8 @@ else:
     needs_update = True
 
 if needs_update:
-    print("writing configuration to " + config_file)
+    print("Config file missing or wrong format!")
+    print("Writing default configuration to " + config_file)
     file = open(config_file, "w")
     file.write(json.dumps(conf, sort_keys=True, indent=4, separators=(',', ': ')))
     file.flush()

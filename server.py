@@ -81,13 +81,11 @@ class BPMServer():
         except ImportError:
             self.use_GPIO = False
         if self.use_GPIO:
-        if GPIO.input(settings.conf["GPIO"]): #avoid the turn off Interrupt
+            if GPIO.input(settings.conf["GPIO"]): #avoid the turn off Interrupt
                 self.bpmTick()
     #
     
-        
-    diff = settings.conf["max_diff"]
-    
+            
     server = HTTPserver()
     
     playing_index = 0
@@ -107,7 +105,7 @@ class BPMServer():
     bpm = 0
     bpmShift = 0  #pitch via Web UI
     keep_running = True
-    debug = False
+    debug = settings.conf["debug"]
     shutdownCommand = "0000" #default, overwritten later.
     use_GPIO = False
     info = {
@@ -139,11 +137,11 @@ class BPMServer():
         else: 
             self.use_GPIO = True
         if self.use_GPIO:
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setup(settings.conf["GPIO"],GPIO.IN, pull_up_down = GPIO.PUD_DOWN)
-        GPIO.add_event_detect(settings.conf["GPIO"], GPIO.RISING, callback = self.Interrupt, bouncetime = 200)
+            GPIO.setmode(GPIO.BCM)
+            GPIO.setup(settings.conf["GPIO"],GPIO.IN, pull_up_down = GPIO.PUD_DOWN)
+            GPIO.add_event_detect(settings.conf["GPIO"], GPIO.RISING, callback = self.Interrupt, bouncetime = 200)
 
-    print("HTTP> Starting HTTP Server!")
+        print("HTTP> Starting HTTP Server!")
 
         self.server.daemon = True
         self.server.bpmServer = self
@@ -163,10 +161,15 @@ class BPMServer():
             self.bpmHistory.append(self.bpm)
             self.bpmAverage = (sum(self.bpmHistory)/settings.conf["average"]) 
             self.info["bpm"] = self.bpmAverage + self.bpmShift
-            print ("MAIN.autoplay>  Enabled: %s | Endtime: %i | Now: %i | Difference: %i " % (self.autoplaynext_enabled, self.autoplaynext_endtime, time.time(), (self.autoplaynext_endtime-time.time())))
+            if self.debug:
+                print ("MAIN.autoplay>  Enabled: %s | Endtime: %i | Now: %i | Difference: %i " % (self.autoplaynext_enabled, self.autoplaynext_endtime, time.time(), (self.autoplaynext_endtime-time.time())))
             if self.autoplaynext_enabled and self.autoplaynext_endtime < time.time():
                 #self.autoplaynext_enabled = False
-                songToPlay = self.getBestMatch(self.bpm + self.bpmShift,self.diff)
+                songToPlay = self.getBestMatch(self.bpm + self.bpmShift)
+                if songToPlay == None:
+                    autoplaynext_enabled = false;
+                    print("MAIN.autoplay> Stoped Autoplay.")
+                    continue
                 print("MAIN.autoplay> %i New Song: %s" % (self.playing_index, songToPlay[2]))
                 self.playSong(songToPlay[2])  
                 self.updatePlayerStatisInfo()
@@ -215,21 +218,21 @@ class BPMServer():
             print(self.played_history)
             self.playing_index += +1
             if(self.playing_index == len(self.played_history)):
-                songToPlay = self.getBestMatch(self.bpm + self.bpmShift,self.diff) #should add new song AND jump to new song
+                songToPlay = self.getBestMatch(self.bpm + self.bpmShift) #should add new song AND jump to new song
             print("CMD> %i Next Old Song: %s" % (self.playing_index, self.played_history[self.playing_index]["path"]))
             self.playSong(self.played_history[self.playing_index]["path"])
             self.updatePlayerStatisInfo()
             return {"status": 102, "info": self.info} 
           
         if cmd.lower() == "forcenext":
-            songToPlay = self.getBestMatch(self.bpm + self.bpmShift,self.diff)
+            songToPlay = self.getBestMatch(self.bpm + self.bpmShift)
             print("CMD> %i New Song: %s" % (self.playing_index, songToPlay[2]))
             self.playSong(songToPlay[2])
             self.updatePlayerStatisInfo()
             return {"status": 0, "info": self.info}
             
         if cmd.lower() == "playpause":
-            #songToPlay = self.getBestMatch(self.bpm + self.bpmShift,self.diff)
+            #songToPlay = self.getBestMatch(self.bpm + self.bpmShift)
             if moc.is_playing():
                 self.pauseSong()
             else:
@@ -310,41 +313,79 @@ class BPMServer():
         else:
             return {"status": -201, "error": "Error: command " + cmd + " not found"}
     
-    def getBestMatch(self,bpm,diff): #remember to add bpm pitch to bpm.
+    def getBestMatch(self,bpm): #remember to add bpm pitch to bpm.
         db = sqlite3.connect("music.db") #changed extention
         c = db.cursor()
-        c.execute('SELECT * FROM "music" WHERE "bpm" >= ? AND "bpm" <= ? ORDER BY ABS("bpm" - ?) ASC;', (bpm - diff, bpm + diff, bpm)) #TODO bpm / 2, bpm * 2 
-        for song in c: 
-                            # (index, bpm, file)  #index starts at 1!
-                            # (1, -1, u'/music/SUBFOLDER/(I Want to Wear) Yellow & Blue - TalkAcanthi - Rocking is Magic.mp3')
-            song
-            if self.debug:
-                print("Match> Song is %s" % song[2])
-            was_played = False
-            for i in self.played_history:
-                if song[0] == i["id"]:
-                    was_played = True
-            if was_played:
-                if self.debug:
-                    print("Match> Already played, skipping.")
-                continue
-            audiofile = eyed3.load(song[2]) #path
-            bpm = audiofile.tag.bpm
-            self.played_history.append({"id":       song[0],
-                                        "bpm":      song[1],
-                                        "path":     song[2],
-                                        "title":    audiofile.tag.title,
-                                        "album":    audiofile.tag.album,
-                                        "artist":   audiofile.tag.artist
-                                        })
-            self.playing_index=len(self.played_history)-1 #Reset 
-            db.close()
-            return song #stop here            
+        
+        resultsong = {} 
+        while True:
+            dist = -1
+            isDefault = True
+            resetedHistory = False
+            c.execute('SELECT * FROM music ORDER BY bpm ASC')   #TODO bpm / 2, bpm * 2 
+            if c.rowcount == 1:
+                raise ValueError("Database returned nothing. Please scan for files.")
             
+            for song in c: 
+                                # (index, bpm, file)    index starts at 1!
+                                #                    
+                                # (1, -1, u'/music/SUBFOLDER/(I Want to Wear) Yellow & Blue - TalkAcanthi - Rocking is Magic.mp3')
+                curr_dist = abs(song[1] - bpm)
+                print("Match< %s > diff: %i" % (song[2], song[1] - bpm))
+                if curr_dist <= dist or dist == -1:
+                    was_played = False
+                    print("Match> curr_diff %i is smaller als dist %i" % (curr_dist,dist))
+                    for x in range(self.playing_index , len(self.played_history)-1):
+                        i = self.played_history[x] 
+                        if song[0] == i["id"]:
+                            was_played = True
+                        #if#
+                    #for#
+                    if was_played:
+                        if self.debug:
+                            print("Match> Already played, skipping.")
+                    else:
+                        dist = curr_dist
+                        resultsong = song
+                        isDefault = False
+                        if self.debug:
+                            print("Match> add %s with %i" % (resultsong, dist))
+                    #if#
+                #if#
+            #for#
+            print(resultsong)
+            if isDefault == True and not resetedHistory:
+                self.playing_index=max(len(self.played_history)-1,0) #Reset 
+                print("Match> reseted was-played-status.")
+                resetedHistory = True
+            elif isDefault == True and resetedHistory:
+                raise ValueError("Match> No unplayed songs found after clearing was-played-status twice.")
+            elif not isDefault:
+                print("Match> Found Song")
+                break
+            #if#
+            print("Match> Poll.")
+        #while#
+        c.fetchall()
         db.close()
-        return self.getBestMatch(bpm,diff+5)
+        if self.debug:
+            print("Match> Song is %s, with a bpm differende of %i " % (resultsong[2], dist))
+        #if#
+        
+        audiofile = eyed3.core.load(resultsong[2]) #path
+        bpm = audiofile.tag.bpm
+        self.played_history.append({"id":       resultsong[0],
+                                    "bpm":      resultsong[1],
+                                    "path":     resultsong[2],
+                                    "title":    audiofile.tag.title,
+                                    "album":    audiofile.tag.album,
+                                    "artist":   audiofile.tag.artist
+                                    })
+        return resultsong #stop here            
+    #def#
         
     def playSong(self,file):
+        print("playSong> Loading file %s" , file)
         moc.quickplay([file])
         print("playSong> Waiting for Song to load...")
         songInfo =  moc.current_track_info()
@@ -352,7 +393,8 @@ class BPMServer():
             print("playSong> Still waiting for Song to load...    %s" % file)
             songInfo =  moc.current_track_info()
             time.sleep(0.01)
-        print(songInfo);
+        if(self.debug):
+            print(songInfo);
         if not songInfo['state'] == 0:
             self.autoplaynext_enabled = True
             self.autoplaynext_endtime = time.time() + (( int(songInfo['totalsec']) - int(songInfo['currentsec']) ))
@@ -396,6 +438,7 @@ class BPMServer():
          moc.seek(time_to_seek_with)
          songInfo = moc.info()
          print(songInfo)
+         
     def getPlayerStatus(self,songInfo = moc.info()):
         #print("getPlyrStats> moc.info() returns")
         #print(songInfo)
@@ -456,7 +499,7 @@ class BPMServer():
             artwork_string = "data:image/jpeg;charset=utf-8;base64," + encoded_string
             return {"status": -203, "error": "File has no Cover.", "cover":artwork_string }
         if self.debug:
-            print("COVER> loading atwork cover as cover")
+            print("COVER> loading artwork cover as cover")
 
         #self.cover_small = contents
         self.cover_data = artwork
