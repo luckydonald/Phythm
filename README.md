@@ -1,7 +1,12 @@
 Phythm
 ======
 
-The real Phythm Project
+Listen to music at the right speed. Your speed. Your rythm. **Phythm**.
+
+Phythm is a Python programm to play matching music files (they need to be tagged with a BPM) depending on your current BPM.
+Designed for the Raspberry Pi, you can connect any sensor (with on or off state) to the configured port to messure a pulse, your steps, or how fast you swing the paddels of your bike.
+
+With attatching an WLAN dongle, you can also use the mobile interface, to see your speed, what's playing (ID3, cover art etc.), and what will be next.
 
 
 Installation
